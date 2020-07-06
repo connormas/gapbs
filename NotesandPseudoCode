@@ -104,3 +104,7 @@ hurt performance. this is beacause inserting elements into array will require th
 everything after in the array will have to be manually shifted. this problem would be 
 alleviated if the neighbors array was instead a linked list. because of this, it was not 
 added into the above pseudo code for MakeCSR(). 
+
+follow up/revision: this will have to be changed to work from the lsb to the msb. could be
+base case that checks if v is initally less than 32 (0b00111111) and then can set the sign 
+bit for that one and only block, otherwise enter the while loop and work from there.
