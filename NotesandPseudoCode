@@ -1,0 +1,74 @@
+Connor Masterson
+
+ideas on compression to reduce peak memory usage
+
+1. change EdgeList to store (NodeID, DestID - NodeID) to compress EdgeList
+	- with large potentially NodeID's the difference could end up being smaller than the 
+	  DestID. e.g. instead of EdgePair <123456789, 123456799> => <123456789, 10>
+	  but this would add an encoding and decoding step, could hurt performance if the 
+	  DestID - NodeID results in large number because this wouldn't yield a 
+	  lot of compression while still requiring the encoding and decoding. could 
+	  turn out to be unreliable.
+	- this is more of just a more specific application that came from learning about 
+	  difference encoding. changing the format of the EdgeList will require decoding
+	  later on. 
+
+2. difference encoding 
+	- {v - v0, v1 - v0, v2 - v1, ... } could be used to compress CSR. series of 
+	  k-bit blocks. first block could be negative so it has a sign bit as well
+	  as the continue bit and data bits. stick with byte codes, not nibble codes.
+	  this will speed up decoding because of byte alignment. hopefully decoding
+	  can be parallelized.
+	  (run-length encoded byte-codes require more storage but speed up decoding.
+	  more details can be found in section 8 of Julian Shun's thesis.)
+	  NOTE: makes more sense if DestID and NodeID are of type int. 
+
+3. reference encoding
+	- could be good for veritces with high degrees and similar adjacency lists
+	  but would add extra computation, specifically in the form of comparisons.
+	  might also require more jumping around in memory if adjacency lists are 
+	  constantly just pointing to other adjacency lists. (pointer chasing)
+
+4. reordering for locality
+	- apparently this is np-hard so we'll get back to this later.
+
+
+pseudo code for building graph in place and minimizing peak memory usage.
+will attempt to do this with difference encoding. if this were implemented,
+it would require that proper decoding be implemented as well. hopefully 
+that decoding won't become a bottle neck.
+
+void MakeCSR(const EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs) {
+  
+  // this part stays the same
+  pvector<NodeID_> degrees = CountDegrees(el, transpose);
+  pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
+  *neighs = new DestID_[offsets[num_nodes_]];
+  *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
+  
+
+  // this part is where the difference encoding is implemented
+
+  typename prev = some constant //perhaps the base mem address of the EdgeList
+  
+  #pragma omp parallel for
+  for (auto it = el.begin(); it < el.end(); it++) {
+    Edge e = *it;
+
+    if (symmetrize_ || (!symmetrize_ && !transpose))
+      (*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v - prev;
+      prev = e.v;
+    
+    if (symmetrize_ || (!symmetrize_ && transpose))
+      source = GetSource(e)    //this way we dont call it twice
+      (*neighs)[fetch_and_add(offsets[static_cast<NodeID_>(e.v)], 1)] = source - prev;
+      prev = source;
+  }
+}
+
+
+notes on this implementation: this trades peak mem usage for execution time because now 
+decoding must be implemented. hopefully the speedup gained from going to disk less often
+outweighs the slowdown incurred from decoding. Whether or not this implementation yields
+a speedup may depend on the system it is running on. perhaps some heuristic based off of 
+the specs of the system can determine the behavior the program chooses. Also, for decoding, that initial constant value will have to be known by whatever function decodes the *neighs array. 
