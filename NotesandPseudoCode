@@ -66,9 +66,42 @@ void MakeCSR(const EdgeList &el, bool transpose, DestID_*** index, DestID_** nei
   }
 }
 
-
 notes on this implementation: this trades peak mem usage for execution time because now 
 decoding must be implemented. hopefully the speedup gained from going to disk less often
 outweighs the slowdown incurred from decoding. Whether or not this implementation yields
 a speedup may depend on the system it is running on. perhaps some heuristic based off of 
-the specs of the system can determine the behavior the program chooses. Also, for decoding, that initial constant value will have to be known by whatever function decodes the *neighs array. 
+the specs of the system can determine the behavior the program chooses. Also, for decoding,
+that initial constant value will have to be known by whatever function decodes the *neighs
+array. Also, this does not actually split the number into k-byte blocks. that would require
+the help of another function, written in pseudo code below. 
+
+void splitIntoKByteBlocks(DestID_[] &neighs, int v){
+  const uint8_t continueBit = 128; // 0b10000000
+  const uint8_t signBit = 64;      // 0b01000000 
+  
+  uint8_t b = 6 most significant bits of v
+  if (b < 0) {
+    b += signBit;
+  }
+  if (v > 0) {
+  	b += continueBit;
+  }
+  prepend b to neighs[]   // and keep iterator at index after this newly added element
+                          // e.g. after append, iterator is at 0 | 1 2 3 4 5
+
+  // this would be difficult to parallelize
+  while(v > 0){
+  	b = 7 most significant bits of v
+  	if (v > 0){
+  		b += continueBit;
+  	}
+  	insert into neighs[]
+  }
+}
+
+
+notes on this helper function: this function, while helping to save space, will seriously
+hurt performance. this is beacause inserting elements into array will require that 
+everything after in the array will have to be manually shifted. this problem would be 
+alleviated if the neighbors array was instead a linked list. because of this, it was not 
+added into the above pseudo code for MakeCSR(). 
