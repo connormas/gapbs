@@ -75,7 +75,7 @@ that initial constant value will have to be known by whatever function decodes t
 array. Also, this does not actually split the number into k-byte blocks. that would require
 the help of another function, written in pseudo code below. 
 
-void splitIntoKByteBlocks(DestID_[] &neighs, int v){
+void splitIntoKByteBlocks(&neighs[], int index, int v, ){
   const uint8_t continueBit = 128; // 0b10000000
   const uint8_t signBit = 64;      // 0b01000000 
   
@@ -85,9 +85,8 @@ void splitIntoKByteBlocks(DestID_[] &neighs, int v){
   }
   if (v > 0) {
   	b += continueBit;
-  }
-  prepend b to neighs[]   // and keep iterator at index after this newly added element
-                          // e.g. after append, iterator is at 0 | 1 2 3 4 5
+  }  
+  insert b into neighs at index and increment index  
 
   // this would be difficult to parallelize
   while(v > 0){
@@ -95,7 +94,7 @@ void splitIntoKByteBlocks(DestID_[] &neighs, int v){
   	if (v > 0){
   		b += continueBit;
   	}
-  	insert into neighs[]
+  	insert b into neighs at index and increment index 
   }
 }
 
