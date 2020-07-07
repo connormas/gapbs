@@ -108,3 +108,18 @@ added into the above pseudo code for MakeCSR().
 follow up/revision: this will have to be changed to work from the lsb to the msb. could be
 base case that checks if v is initally less than 32 (0b00111111) and then can set the sign 
 bit for that one and only block, otherwise enter the while loop and work from there.
+
+notes from talk on 7-6-20
+read data twice
+dcsr (double compressed)
+static, dynamic, streaming graph (data set is too big to fit in memory)
+vector size vs capacity
+first touch policy: gets allocated close to wherever asks for data first
+
+edgelist becomes neighbors (col) array
+static dynamic conversion cast
+row -> index    // wikipedia terms -> our terms
+col -> neighs
+
+in place method 3
+do it in vectors. vector of vectors
