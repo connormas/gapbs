@@ -123,3 +123,17 @@ col -> neighs
 
 in place method 3
 do it in vectors. vector of vectors
+PseudoCode 2.0
+
+void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs){
+	decltype() overWriteEL = el.data();
+	for (auto it = el.begin(); it < el.end(); it++)
+		Edge readFromEL = *it;
+  	if (symmetrize_ || (!symmetrize_ && !transpose))
+  		// (*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
+  		overWriteEL = e.v;
+		if (symmetrize_ || (!symmetrize_ && transpose))
+  		// (*neighs)[fetch_and_add(offsets[static_cast<NodeID_>(e.v)], 1)] = GetSource(e); 	
+  		overWriteEL = GetSource(e);
+		overWriteEL++;
+}

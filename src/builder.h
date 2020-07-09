@@ -177,6 +177,28 @@ class BuilderBase {
                                                 out_neighs);
     }
   }
+	
+	/* 
+  Code that attempts to build in-place and keep peak mem 
+  usage low. We do this by repurposing the EdgeList pvector and 
+  using it as the new neighbors array.
+	*/
+  void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index,
+               DestID_** neighs) {
+    //auto it = el.begin();
+		//Edge e = *it;
+		int* overWriteEL = (int*)el.data();
+		//std::cout << "Type of v is: " << typeid(e.v).name() << "\n";
+		//std::cout << "Type of pointer i made is: " << typeid(overWriteEL).name() << "\n";
+		for(auto it = el.begin(); it < el.end(); it++){
+			Edge e = *it;
+      if (symmetrize_ || (!symmetrize_ && !transpose))
+        overWriteEL = e.v;
+      if (symmetrize_ || (!symmetrize_ && transpose))
+        overWriteEL = GetSource(e);
+		}
+		overWriteEL++;
+	}
 
   /*
   Graph Bulding Steps (for CSR):
