@@ -186,19 +186,19 @@ class BuilderBase {
   void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index,
                DestID_** neighs) {
     //auto it = el.begin();
-		//Edge e = *it;
-		int* overWriteEL = (int*)el.data();
-		//std::cout << "Type of v is: " << typeid(e.v).name() << "\n";
-		//std::cout << "Type of pointer i made is: " << typeid(overWriteEL).name() << "\n";
-		for(auto it = el.begin(); it < el.end(); it++){
-			Edge e = *it;
+    //Edge e = *it;
+    int* overWriteEL = (int*)el.data();
+    //std::cout << "Type of v is: " << typeid(e.v).name() << "\n";
+    //std::cout << "Type of pointer i made is: " << typeid(overWriteEL).name() << "\n";
+    for(auto it = el.begin(); it < el.end(); it++){
+      Edge e = *it;
       if (symmetrize_ || (!symmetrize_ && !transpose))
         overWriteEL = e.v;
       if (symmetrize_ || (!symmetrize_ && transpose))
         overWriteEL = GetSource(e);
-		}
-		overWriteEL++;
-	}
+    }
+    overWriteEL++;
+  }
 
   /*
   Graph Bulding Steps (for CSR):
