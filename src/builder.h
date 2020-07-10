@@ -185,19 +185,26 @@ class BuilderBase {
 	*/
   void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index,
                DestID_** neighs) {
-    //auto it = el.begin();
-    //Edge e = *it;
-    int* overWriteEL = (int*)el.data();
-    //std::cout << "Type of v is: " << typeid(e.v).name() << "\n";
-    //std::cout << "Type of pointer i made is: " << typeid(overWriteEL).name() << "\n";
-    for(auto it = el.begin(); it < el.end(); it++){
+    pvector<NodeID_> degrees = CountDegrees(el, transpose);
+    pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
+    DestID_* overWriteEL = (DestID_*)el.data();
+    std::cout << "type of overWriteEL: " << typeid(overWriteEL).name() << "\n";
+		for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
       if (symmetrize_ || (!symmetrize_ && !transpose))
-        overWriteEL = e.v;
+        overWriteEL = &(e.v);
       if (symmetrize_ || (!symmetrize_ && transpose))
-        overWriteEL = GetSource(e);
+        overWriteEL = *(GetSource(e));
     }
     overWriteEL++;
+		int* n = (int*)el.data();
+    int i = 0;
+		while(i < 10) {
+			std::cout << "neighs from MakeCSRInPlace " << i << ": " << n << "\n";
+			n++;
+			i++;
+		}		
+		exit(1);
   }
 
   /*
@@ -213,15 +220,31 @@ class BuilderBase {
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     *neighs = new DestID_[offsets[num_nodes_]];
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-    #pragma omp parallel for
+
+		/*
+		std::cout << "printing edgelist:\n";
+		int count = 0;
+		for (auto it = el.begin(); it < el.end(); it++) {
+    	std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
+			count++;
+		}
+		*/
+
+		#pragma omp parallel for
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
       if (symmetrize_ || (!symmetrize_ && !transpose))
         (*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
-      if (symmetrize_ || (!symmetrize_ && transpose))
+     if (symmetrize_ || (!symmetrize_ && transpose))
         (*neighs)[fetch_and_add(offsets[static_cast<NodeID_>(e.v)], 1)] =
             GetSource(e);
     }
+		
+		/*
+		for(int i = 0; i < (int)sizeof(*neighs); i++){
+			std::cout << i << ": " << (*neighs)[i] << "\n";
+		}
+		*/
   }
 
   CSRGraph<NodeID_, DestID_, invert> MakeGraphFromEL(EdgeList &el) {
