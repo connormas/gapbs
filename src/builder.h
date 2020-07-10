@@ -188,22 +188,24 @@ class BuilderBase {
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     DestID_* overWriteEL = (DestID_*)el.data();
-    std::cout << "type of overWriteEL: " << typeid(overWriteEL).name() << "\n";
+    std::cout << "type of overWriteEL: " << typeid(*overWriteEL).name() << "\n";
 		for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
+    	//std::cout << "type of e.v: " << typeid(e.v).name() << "\n";
       if (symmetrize_ || (!symmetrize_ && !transpose))
-        overWriteEL = &(e.v);
+        *overWriteEL = e.v;
       if (symmetrize_ || (!symmetrize_ && transpose))
-        overWriteEL = *(GetSource(e));
-    }
-    overWriteEL++;
+        *overWriteEL = GetSource(e);
+    	
+			overWriteEL++;
+		}
 		int* n = (int*)el.data();
     int i = 0;
 		while(i < 10) {
-			std::cout << "neighs from MakeCSRInPlace " << i << ": " << n << "\n";
+			std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
 			n++;
 			i++;
-		}		
+		}	
 		exit(1);
   }
 
@@ -221,14 +223,14 @@ class BuilderBase {
     *neighs = new DestID_[offsets[num_nodes_]];
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
 
-		/*
 		std::cout << "printing edgelist:\n";
 		int count = 0;
 		for (auto it = el.begin(); it < el.end(); it++) {
     	std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
 			count++;
 		}
-		*/
+		
+		MakeCSRInPlace(el, transpose, index, neighs);
 
 		#pragma omp parallel for
     for (auto it = el.begin(); it < el.end(); it++) {
