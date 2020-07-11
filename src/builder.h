@@ -190,15 +190,17 @@ class BuilderBase {
     DestID_* overWriteEL = (DestID_*)el.data();	
 		for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
-    	//std::cout << "type of e.v: " << typeid(e.v).name() << "\n";
+    	std::cout << "In Loop (in place) e = ";
       if (symmetrize_ || (!symmetrize_ && !transpose))
         *overWriteEL = e.v;
+				std::cout << e.v << "\n";
       if (symmetrize_ || (!symmetrize_ && transpose))
         *overWriteEL = GetSource(e);
+				std::cout << GetSource(e) << "\n";
     	
 			overWriteEL++;
 		}
-		int* n = (int*)el.data();
+		DestID_* n = (DestID_*)el.data();
     int i = 0;
 		while(i < 10) {
 			std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
@@ -229,21 +231,24 @@ class BuilderBase {
 			count++;
 		}
 		
-		//MakeCSRInPlace(el, transpose, index, neighs);
+		MakeCSRInPlace(el, transpose, index, neighs);
 
-		#pragma omp parallel for
+		//#pragma omp parallel for
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
+    	std::cout << "In Loop (regular) e = ";
       if (symmetrize_ || (!symmetrize_ && !transpose))
         (*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
-     if (symmetrize_ || (!symmetrize_ && transpose))
+				std::cout << e.v << "\n";
+      if (symmetrize_ || (!symmetrize_ && transpose))
         (*neighs)[fetch_and_add(offsets[static_cast<NodeID_>(e.v)], 1)] =
             GetSource(e);
+				std::cout << GetSource(e) << "\n";
     }
 		
 		
 		for(int i = 0; i < (int)sizeof(*neighs); i++){
-			std::cout << i << ": " << (*neighs)[i] << "\n";
+			std::cout << "neighs from MakeCSR " <<  i << ": " << (*neighs)[i] << "\n";
 		}
 		
   }
