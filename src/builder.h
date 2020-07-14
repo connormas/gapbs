@@ -188,21 +188,27 @@ class BuilderBase {
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     DestID_* overWriteEL = (DestID_*)el.data();	
-		for(auto it = el.begin(); it < el.end(); it++){
+	  auto elLength = el.size();
+		std::sort(el.begin(), el.end());
+	  for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
     	//std::cout << "In Loop (in place) e = ";
-      if (symmetrize_ || (!symmetrize_ && !transpose))
-        *overWriteEL = e.v;
-				overWriteEL++;
+      if (symmetrize_ || (!symmetrize_ && !transpose)){
+        //(DestID_*)[fetch_and_add(overWriteEL, 1)] = e.v;
+				*overWriteEL = e.v;
+        overWriteEL++;
 				//std::cout << "writing to mem addresss: " << overWriteEL << ", " << e.v << "\n";
-      if (symmetrize_ || (!symmetrize_ && transpose))
+			}
+      /*if (symmetrize_ || (!symmetrize_ && transpose)){
+        //(DestID_*)[fetch_and_add(overWriteEL, 1)] = GetSource(e);
         *overWriteEL = GetSource(e);
-				overWriteEL++;
-				//std::cout << "writeing to mem address: " << overWriteEL << ", " << GetSource(e) << "\n";	
+        overWriteEL++;
+				//std::cout << "writing to mem address: " << overWriteEL << ", " << GetSource(e) << "\n";	
+			}*/
 		}
 		DestID_* n = (DestID_*)el.data();
     int i = 0;
-		while(i < 10) {
+		while(i < (int)elLength) {
 			std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
 			n++;
 			i++;
@@ -231,7 +237,7 @@ class BuilderBase {
 			count++;
 		}
 		
-		//MakeCSRInPlace(el, transpose, index, neighs);
+		MakeCSRInPlace(el, transpose, index, neighs);
 
 		//#pragma omp parallel for
     for (auto it = el.begin(); it < el.end(); it++) {
@@ -247,7 +253,7 @@ class BuilderBase {
     }
 		
 		
-		for(int i = 0; i < (int)sizeof(*neighs); i++){
+		for(int i = 0; i < 15; i++){
 			std::cout << "neighs from MakeCSR " <<  i << ": " << ((*neighs)[i]) << "\n";
 		}
 		
