@@ -192,12 +192,9 @@ class BuilderBase {
 		std::sort(el.begin(), el.end());
 	  for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
-    	//std::cout << "In Loop (in place) e = ";
       if (symmetrize_ || (!symmetrize_ && !transpose)){
-        //(DestID_*)[fetch_and_add(overWriteEL, 1)] = e.v;
 				*overWriteEL = e.v;
         overWriteEL++;
-				//std::cout << "writing to mem addresss: " << overWriteEL << ", " << e.v << "\n";
 			}
       /*if (symmetrize_ || (!symmetrize_ && transpose)){
         //(DestID_*)[fetch_and_add(overWriteEL, 1)] = GetSource(e);
@@ -206,12 +203,24 @@ class BuilderBase {
 				//std::cout << "writing to mem address: " << overWriteEL << ", " << GetSource(e) << "\n";	
 			}*/
 		}
+	
+		int* d = (int*)degrees.data();
+	  int i = 0;
+		while(i < (int)degrees.size()){
+			std::cout << "degree " << i << ": " << *d << "\n";
+			d++; i++;
+		}
+		int* o = (int*)offsets.data();
+		i = 0;
+		while(i < (int)offsets.size()){
+			std::cout << "offset " << i << ": " << *o << "\n";
+			o++; i++;
+		}
 		DestID_* n = (DestID_*)el.data();
-    int i = 0;
+    i = 0;
 		while(i < (int)elLength) {
 			std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
-			n++;
-			i++;
+			n++; i++;
 		}	
 		exit(1);
   }
