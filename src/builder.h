@@ -1,4 +1,4 @@
-// Copyright (c) 2015, The Regents of the University of California (Regents)
+// copyright (c) 2015, The Regents of the University of California (Regents)
 // See LICENSE.txt for license details
 
 #ifndef BUILDER_H_
@@ -222,25 +222,26 @@ class BuilderBase {
 	  }
 	  for(int i = 0; i < (int)inoffsets.size(); i++){
 			total += inoffsets[i];
-			inoffsets[i] = total + 6;
+			inoffsets[i] = total;
 		}
 		  	
 
 		std::cout << "NOW PRINTING INOFFSETS\n";
 		for(int _ = 0; _ < (int)inoffsets.size(); _++)
 		  std::cout << inoffsets[_] << "\n";
-
-		/*deg = degrees.data();
+    
+		//over write inneighs to EdgeList
+		auto deg = degrees.data();
 		N = (DestID_*)el.data();
 		int neighbor = 0;
 		for(int i = 0; i < (int)degrees.size(); i++, deg++){
 			for(int _ = 0; _ < (int)(*deg); _++){
 				//std::cout << neighbor << " is an in-neigh of " << *N << "\n"; 
-				//(*neighs)[fetch_and_add(N, 1)] = neighbor;
+				(overWriteEL)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
 				N++;
 			}
 			neighbor++;
-		}*/
+		}
 
 		//PRINTING FOR DEBUGGING	
 		//int* d = (int*)degrees.data();
@@ -257,7 +258,7 @@ class BuilderBase {
   	}*/
 		DestID_* n = (DestID_*)el.data();
     int i = 0;
-		while(i < (int)elLength) {
+		while(i < (2 * (int)elLength)) {
 			std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
 			n++; i++;
 		}	
