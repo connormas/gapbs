@@ -222,7 +222,7 @@ class BuilderBase {
 	  }
 	  for(int i = 0; i < (int)inoffsets.size(); i++){
 			total += inoffsets[i];
-			inoffsets[i] = total;
+			inoffsets[i] = total + 6;
 		}
 		  	
 
