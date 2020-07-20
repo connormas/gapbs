@@ -177,6 +177,32 @@ class BuilderBase {
                                                 out_neighs);
     }
   }
+  
+	/*
+	This function takes an EdgeList Obj by reference. It assumes this is an edgelist that
+	has been partially overwritten with the outneighs of the original EdgeList data. This code
+	makes and returns a pvector called inoffsets that will contain the offsets for writing the 
+	inneighs to the memory previously containing the edgelist.
+	*/
+  pvector<SGOffset> MakeOffsetsFromOutNeighs(const EdgeList &el, int elLength){
+    pvector<SGOffset> inoffsets(num_nodes_ + 1, 0); 
+		DestID_* N = (DestID_*)el.data();
+		int total = 0;
+	  for(int i = 0; i < (int)elLength; i++, N++){
+	    inoffsets[*N + 1]++;
+	  }
+	  for(int i = 0; i < (int)inoffsets.size(); i++){
+			total += inoffsets[i];
+			inoffsets[i] = total;
+		}
+
+		//printing for debugging
+		std::cout << "NOW PRINTING INOFFSETS\n";
+		for(int _ = 0; _ < (int)inoffsets.size(); _++)
+		  std::cout << inoffsets[_] << "\n";
+		
+		return inoffsets;
+	}
 	
 	/* 
   Code that attempts to build in-place and keep peak mem 
@@ -185,18 +211,18 @@ class BuilderBase {
 	*/
   void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index,
                DestID_** neighs) {
+		// VARIABLE/OBJECT DECLARATIONS
 		std::sort(el.begin(), el.end());
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
-    pvector<SGOffset> inoffsets(num_nodes_ + 1, 0); 
 		DestID_* overWriteEL = (DestID_*)el.data();	
-	  auto elLength = el.size();
+	  int elLength = el.size();
 		
-
+    // printing for debugging
 		for(int i = 0; i < (int)offsets.size(); i++)
 		  std::cout << "offset " << i << ": " << offsets[i] << "\n";
 		
-		// OUT GOING NEIGHBORS
+	  // OUT GOING NEIGHBORS
 		std::sort(el.begin(), el.end());
 	  for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
@@ -212,55 +238,25 @@ class BuilderBase {
 			}*/
 		}
 
-	// INCOMING NEIGHBORS 
-		
-		// make in-neighs offsets 
-		DestID_* N = (DestID_*)el.data();
-		int total = 0;
-	  for(int i = 0; i < (int)elLength; i++, N++){
-	    inoffsets[*N + 1]++;
-	  }
-	  for(int i = 0; i < (int)inoffsets.size(); i++){
-			total += inoffsets[i];
-			inoffsets[i] = total;
-		}
-		  	
-
-		std::cout << "NOW PRINTING INOFFSETS\n";
-		for(int _ = 0; _ < (int)inoffsets.size(); _++)
-		  std::cout << inoffsets[_] << "\n";
+	  // INCOMING NEIGHBORS 
+		pvector<SGOffset> inoffsets = MakeOffsetsFromOutNeighs(el, elLength);
     
 		//over write inneighs to EdgeList
 		auto deg = degrees.data();
-		N = (DestID_*)el.data();
+		DestID_* N = (DestID_*)el.data();
 		int neighbor = 0;
 		for(int i = 0; i < (int)degrees.size(); i++, deg++){
 			for(int _ = 0; _ < (int)(*deg); _++){
-				//std::cout << neighbor << " is an in-neigh of " << *N << "\n"; 
 				(overWriteEL)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
 				N++;
 			}
 			neighbor++;
 		}
-
-		//PRINTING FOR DEBUGGING	
-		//int* d = (int*)degrees.data();
-	  //i = 0;
-		/*while(i < (int)degrees.size()){
-			std::cout << "degree " << i << ": " << *d << "\n";
-			d++; i++;
-		}
-		int* o = (int*)offsets.data();
-		i = 0;
-		while(i < (int)offsets.size()){
-			std::cout << "offset " << i << ": " << *o << "\n";
-			o++; i++;
-  	}*/
+		
+		// printing out final result should be [outneighs : inneighs]
 		DestID_* n = (DestID_*)el.data();
-    int i = 0;
-		while(i < (2 * (int)elLength)) {
+		for(int i = 0; i < (2 * (int)elLength); i++, n++) {
 			std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
-			n++; i++;
 		}	
 		exit(1);
   }
