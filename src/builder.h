@@ -210,7 +210,7 @@ class BuilderBase {
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     DestID_* overWriteEL = (DestID_*)el.data();	
-      int elLength = el.size();
+    int elLength = el.size();
     
       // OUT GOING NEIGHBORS
     std::sort(el.begin(), el.end());
