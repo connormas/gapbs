@@ -195,12 +195,6 @@ class BuilderBase {
 			total += inoffsets[i];
 			inoffsets[i] = total;
 		}
-
-		//printing for debugging
-		std::cout << "NOW PRINTING INOFFSETS\n";
-		for(int _ = 0; _ < (int)inoffsets.size(); _++)
-		  std::cout << inoffsets[_] << "\n";
-		
 		return inoffsets;
 	}
 	
@@ -218,10 +212,6 @@ class BuilderBase {
 		DestID_* overWriteEL = (DestID_*)el.data();	
 	  int elLength = el.size();
 		
-    // printing for debugging
-		for(int i = 0; i < (int)offsets.size(); i++)
-		  std::cout << "offset " << i << ": " << offsets[i] << "\n";
-		
 	  // OUT GOING NEIGHBORS
 		std::sort(el.begin(), el.end());
 	  for(auto it = el.begin(); it < el.end(); it++){
@@ -230,12 +220,6 @@ class BuilderBase {
 				*overWriteEL = e.v;
         overWriteEL++;
 			}
-      /*if (symmetrize_ || (!symmetrize_ && transpose)){
-        //(DestID_*)[fetch_and_add(overWriteEL, 1)] = GetSource(e);
-        *overWriteEL = GetSource(e);
-        overWriteEL++;
-				//std::cout << "writing to mem address: " << overWriteEL << ", " << GetSource(e) << "\n";	
-			}*/
 		}
 
 	  // INCOMING NEIGHBORS 
@@ -245,15 +229,14 @@ class BuilderBase {
 		auto deg = degrees.data();
 		DestID_* N = (DestID_*)el.data();
 		int neighbor = 0;
-		for(int i = 0; i < (int)degrees.size(); i++, deg++){
-			for(int _ = 0; _ < (int)(*deg); _++){
+		for(int i = 0; i < (int)degrees.size(); i++, deg++, neighbor++){
+			for(int _ = 0; _ < (int)(*deg); _++, N++){
 				(overWriteEL)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
-				N++;
 			}
-			neighbor++;
 		}
 		
 		// printing out final result should be [outneighs : inneighs]
+		// will be removed later
 		DestID_* n = (DestID_*)el.data();
 		for(int i = 0; i < (2 * (int)elLength); i++, n++) {
 			std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
@@ -270,7 +253,7 @@ class BuilderBase {
   */
   void MakeCSR(const EdgeList &el, bool transpose, DestID_*** index,
                DestID_** neighs) {
-    std::cout << "num_nodes_ = " << num_nodes_ <<  " printing edgelist:\n";
+    std::cout << "printing edgelist:\n";
 		int count = 0;
 		for (auto it = el.begin(); it < el.end(); it++) {
     	std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
@@ -281,28 +264,20 @@ class BuilderBase {
     
 		pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
-		
-		for(int i = 0; i < (int)offsets.size(); i++)
-		  std::cout << "offset " << i << ": " << offsets[i] << "\n";
-    
 		*neighs = new DestID_[offsets[num_nodes_]];
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
 	
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
       if (symmetrize_ || (!symmetrize_ && !transpose))
-        std::cout << "offset (1st if): " << e.u << " " << offsets[e.u] << "\n"; 
 				(*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
       if (symmetrize_ || (!symmetrize_ && transpose))
-        //std::cout << "offset (2nd if): " << static_cast<NodeID_>(e.v) << " " 
-				//          << offsets[static_cast<NodeID_>(e.v)] << "\n"; 
         (*neighs)[fetch_and_add(offsets[static_cast<NodeID_>(e.v)], 1)] =
             GetSource(e);
     }
 		
-		for(int i = 0; i < (int)offsets.size(); i++)
-		  std::cout << "offset " << i << ": " << offsets[i] << "\n";
-
+		// printing out final result should be [outneighs : inneighs]
+		// will be removed later	
 		for(int i = 0; i < 12; i++){
 			std::cout << "neighs from MakeCSR " <<  i << ": " << ((*neighs)[i]) << "\n";	
 		}
