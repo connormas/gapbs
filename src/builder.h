@@ -225,7 +225,7 @@ class BuilderBase {
 	  // INCOMING NEIGHBORS 
 		pvector<SGOffset> inoffsets = MakeOffsetsFromOutNeighs(el, elLength);
     
-		//over write inneighs to EdgeList
+		//over write in-neighs to EdgeList
 		auto deg = degrees.data();
 		DestID_* N = (DestID_*)el.data();
 		int neighbor = 0;
