@@ -19,8 +19,7 @@
 #include "reader.h"
 #include "timer.h"
 #include "util.h"
-
-
+  
 /*
 GAP Benchmark Suite
 Class:  BuilderBase
@@ -211,8 +210,9 @@ class BuilderBase {
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     DestID_* overWriteEL = (DestID_*)el.data();	
     int elLength = el.size();
+    *neighs = (DestID_*)el.data();
     
-      // OUT GOING NEIGHBORS
+    // OUT GOING NEIGHBORS
     std::sort(el.begin(), el.end());
       for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
@@ -234,6 +234,10 @@ class BuilderBase {
         (overWriteEL)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
       }
     }
+
+    // BUILDING GRAPH OBJECT
+    *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
+     
     
     // printing out final result should be [outneighs : inneighs]
     // will be removed later
