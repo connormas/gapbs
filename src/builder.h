@@ -178,70 +178,70 @@ class BuilderBase {
     }
   }
   
-	/*
-	This function takes an EdgeList Obj by reference. It assumes this is an edgelist that
-	has been partially overwritten with the outneighs of the original EdgeList data. This code
-	makes and returns a pvector called inoffsets that will contain the offsets for writing the 
-	inneighs to the memory previously containing the edgelist.
-	*/
+  /*
+  This function takes an EdgeList Obj by reference. It assumes this is an edgelist that
+  has been partially overwritten with the outneighs of the original EdgeList data. This code
+  makes and returns a pvector called inoffsets that will contain the offsets for writing the 
+  inneighs to the memory previously containing the edgelist.
+  */
   pvector<SGOffset> MakeOffsetsFromOutNeighs(const EdgeList &el, int elLength){
     pvector<SGOffset> inoffsets(num_nodes_ + 1, 0); 
-		DestID_* N = (DestID_*)el.data();
-		int total = 0;
-	  for(int i = 0; i < (int)elLength; i++, N++){
-	    inoffsets[*N + 1]++;
-	  }
-	  for(int i = 0; i < (int)inoffsets.size(); i++){
-			total += inoffsets[i];
-			inoffsets[i] = total;
-		}
-		return inoffsets;
-	}
-	
-	/* 
+    DestID_* N = (DestID_*)el.data();
+    int total = 0;
+    for(int i = 0; i < (int)elLength; i++, N++){
+      inoffsets[*N + 1]++;
+    }
+    for(int i = 0; i < (int)inoffsets.size(); i++){
+      total += inoffsets[i];
+      inoffsets[i] = total;
+    }
+    return inoffsets;
+  }
+  
+  /* 
   Code that attempts to build in-place and keep peak mem 
   usage low. We do this by repurposing the EdgeList pvector and 
   using it as the new neighbors array.
-	*/
+  */
   void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index,
                DestID_** neighs) {
-		// VARIABLE/OBJECT DECLARATIONS
-		std::sort(el.begin(), el.end());
+    // VARIABLE/OBJECT DECLARATIONS
+    std::sort(el.begin(), el.end());
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
-		DestID_* overWriteEL = (DestID_*)el.data();	
-	  int elLength = el.size();
-		
-	  // OUT GOING NEIGHBORS
-		std::sort(el.begin(), el.end());
-	  for(auto it = el.begin(); it < el.end(); it++){
+    DestID_* overWriteEL = (DestID_*)el.data();	
+      int elLength = el.size();
+    
+      // OUT GOING NEIGHBORS
+    std::sort(el.begin(), el.end());
+      for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
       if (symmetrize_ || (!symmetrize_ && !transpose)){
-				*overWriteEL = e.v;
+        *overWriteEL = e.v;
         overWriteEL++;
-			}
-		}
+      }
+    }
 
-	  // INCOMING NEIGHBORS 
-		pvector<SGOffset> inoffsets = MakeOffsetsFromOutNeighs(el, elLength);
+    // INCOMING NEIGHBORS 
+    pvector<SGOffset> inoffsets = MakeOffsetsFromOutNeighs(el, elLength);
     
-		//over write in-neighs to EdgeList
-		auto deg = degrees.data();
-		DestID_* N = (DestID_*)el.data();
-		int neighbor = 0;
-		for(int i = 0; i < (int)degrees.size(); i++, deg++, neighbor++){
-			for(int _ = 0; _ < (int)(*deg); _++, N++){
-				(overWriteEL)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
-			}
-		}
-		
-		// printing out final result should be [outneighs : inneighs]
-		// will be removed later
-		DestID_* n = (DestID_*)el.data();
-		for(int i = 0; i < (2 * (int)elLength); i++, n++) {
-			std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
-		}	
-		exit(1);
+    //over write in-neighs to EdgeList
+    auto deg = degrees.data();
+    DestID_* N = (DestID_*)el.data();
+    int neighbor = 0;
+    for(int i = 0; i < (int)degrees.size(); i++, deg++, neighbor++){
+      for(int _ = 0; _ < (int)(*deg); _++, N++){
+        (overWriteEL)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
+      }
+    }
+    
+    // printing out final result should be [outneighs : inneighs]
+    // will be removed later
+    DestID_* n = (DestID_*)el.data();
+    for(int i = 0; i < (2 * (int)elLength); i++, n++) {
+      std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
+    }
+    exit(1);
   }
 
   /*
@@ -254,34 +254,34 @@ class BuilderBase {
   void MakeCSR(const EdgeList &el, bool transpose, DestID_*** index,
                DestID_** neighs) {
     std::cout << "printing edgelist:\n";
-		int count = 0;
-		for (auto it = el.begin(); it < el.end(); it++) {
-    	std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
-			count++;
-		}
-		std::sort(el.begin(), el.end()); 
-		MakeCSRInPlace(el, transpose, index, neighs);
+    int count = 0;
+    for (auto it = el.begin(); it < el.end(); it++) {
+      std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
+      count++;
+    }
+    std::sort(el.begin(), el.end()); 
+    MakeCSRInPlace(el, transpose, index, neighs);
     
-		pvector<NodeID_> degrees = CountDegrees(el, transpose);
+    pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
-		*neighs = new DestID_[offsets[num_nodes_]];
+    *neighs = new DestID_[offsets[num_nodes_]];
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-	
+
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
       if (symmetrize_ || (!symmetrize_ && !transpose))
-				(*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
+        (*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
       if (symmetrize_ || (!symmetrize_ && transpose))
         (*neighs)[fetch_and_add(offsets[static_cast<NodeID_>(e.v)], 1)] =
             GetSource(e);
     }
-		
-		// printing out final result should be [outneighs : inneighs]
-		// will be removed later	
-		for(int i = 0; i < 12; i++){
-			std::cout << "neighs from MakeCSR " <<  i << ": " << ((*neighs)[i]) << "\n";	
-		}
-		exit(1);
+    
+    // printing out final result should be [outneighs : inneighs]
+    // will be removed later	
+    for(int i = 0; i < 12; i++){
+      std::cout << "neighs from MakeCSR " <<  i << ": " << ((*neighs)[i]) << "\n";	
+    }
+    exit(1);
   }
 
   CSRGraph<NodeID_, DestID_, invert> MakeGraphFromEL(EdgeList &el) {
