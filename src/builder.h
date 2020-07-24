@@ -194,6 +194,10 @@ class BuilderBase {
       total += inoffsets[i];
       inoffsets[i] = total;
     }
+    std::cout << "now printing inoffsets:\n";
+    for(int i = 0; i < (int)inoffsets.size(); i++){
+      std::cout << i << ": " << inoffsets[i] << "\n";
+    }
     return inoffsets;
   }
   
@@ -202,21 +206,29 @@ class BuilderBase {
   usage low. We do this by repurposing the EdgeList pvector and 
   using it as the new neighbors array.
   */
-  void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index,
-               DestID_** neighs) {
+  void MakeCSRInPlace(EdgeList &el, DestID_*** index,
+               DestID_** neighs, DestID_*** inv_index, DestID_** inv_neighs) {
+    
+    // printing out initial EdgeList Object
+    std::cout << "printing edgelist:\n";
+    int count = 0;
+    for (auto it = el.begin(); it < el.end(); it++) {
+      std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
+      count++;
+    }
+
     // VARIABLE/OBJECT DECLARATIONS
     std::sort(el.begin(), el.end());
-    pvector<NodeID_> degrees = CountDegrees(el, transpose);
+    pvector<NodeID_> degrees = CountDegrees(el, invert);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     DestID_* overWriteEL = (DestID_*)el.data();	
-    int elLength = el.size();
+    int elLength = el.size();    
     *neighs = (DestID_*)el.data();
     
     // OUT GOING NEIGHBORS
-    std::sort(el.begin(), el.end());
-      for(auto it = el.begin(); it < el.end(); it++){
+    for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
-      if (symmetrize_ || (!symmetrize_ && !transpose)){
+      if (symmetrize_ || (!symmetrize_ && !invert)){
         *overWriteEL = e.v;
         overWriteEL++;
       }
@@ -235,9 +247,12 @@ class BuilderBase {
       }
     }
 
-    // BUILDING GRAPH OBJECT
+    // FINISH BUILDING GRAPH OBJECT
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-     
+    if(!symmetrize_ && invert){
+      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, overWriteEL);
+    }
+
     
     // printing out final result should be [outneighs : inneighs]
     // will be removed later
@@ -257,15 +272,15 @@ class BuilderBase {
   */
   void MakeCSR(const EdgeList &el, bool transpose, DestID_*** index,
                DestID_** neighs) {
+    // printing out inital EdgeList Object
     std::cout << "printing edgelist:\n";
     int count = 0;
     for (auto it = el.begin(); it < el.end(); it++) {
       std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
       count++;
     }
-    std::sort(el.begin(), el.end()); 
-    MakeCSRInPlace(el, transpose, index, neighs);
-    
+
+    std::sort(el.begin(), el.end());  
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     *neighs = new DestID_[offsets[num_nodes_]];
@@ -297,6 +312,33 @@ class BuilderBase {
       num_nodes_ = FindMaxNodeID(el)+1;
     if (needs_weights_)
       Generator<NodeID_, DestID_, WeightT_>::InsertWeights(el);
+    if (!symmetrize_ && invert){
+      std::cout << "made it to MakeGraphFromEL if statement\n";
+      MakeCSRInPlace(el, &index, &neighs, &inv_index, &inv_neighs);
+    } else {
+      MakeCSR(el, false, &index, &neighs);
+      if (!symmetrize_ && invert)
+        MakeCSR(el, true, &inv_index, &inv_neighs);
+    }
+    t.Stop();
+    PrintTime("Build Time", t.Seconds());
+    if (symmetrize_)
+      return CSRGraph<NodeID_, DestID_, invert>(num_nodes_, index, neighs);
+    else
+      return CSRGraph<NodeID_, DestID_, invert>(num_nodes_, index, neighs,
+                                                inv_index, inv_neighs);
+  }
+
+/*
+  CSRGraph<NodeID_, DestID_, invert> MakeGraphFromEL(EdgeList &el) {
+    DestID_ **index = nullptr, **inv_index = nullptr;
+    DestID_ *neighs = nullptr, *inv_neighs = nullptr;
+    Timer t;
+    t.Start();
+    if (num_nodes_ == -1)
+      num_nodes_ = FindMaxNodeID(el)+1;
+    if (needs_weights_)
+      Generator<NodeID_, DestID_, WeightT_>::InsertWeights(el);
     MakeCSR(el, false, &index, &neighs);
     if (!symmetrize_ && invert)
       MakeCSR(el, true, &inv_index, &inv_neighs);
@@ -308,6 +350,7 @@ class BuilderBase {
       return CSRGraph<NodeID_, DestID_, invert>(num_nodes_, index, neighs,
                                                 inv_index, inv_neighs);
   }
+*/
 
   CSRGraph<NodeID_, DestID_, invert> MakeGraph() {
     CSRGraph<NodeID_, DestID_, invert> g;
