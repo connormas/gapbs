@@ -206,8 +206,8 @@ class BuilderBase {
   usage low. We do this by repurposing the EdgeList pvector and 
   using it as the new neighbors array.
   */
-  void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs) {
-    
+  void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs, //) {
+                      DestID_*** inv_index, DestID_** inv_neighs){
     // printing out initial EdgeList Object
     std::cout << "printing edgelist:\n";
     int count = 0;
@@ -225,7 +225,7 @@ class BuilderBase {
     *neighs = (DestID_*)el.data();
  
     // printing for debugging    
-    for(int i = 0; i < offsets.size(); i++){
+    for(int i = 0; i < (int)offsets.size(); i++){
       std::cout << "offsets " << i << ": " << offsets[i] << "\n";
     }
 
@@ -283,7 +283,7 @@ class BuilderBase {
       std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
       count++;
     }
-    MakeCSRInPlace(el, transpose, index, neighs);
+    //MakeCSRInPlace(el, transpose, index, neighs);
 
     std::sort(el.begin(), el.end());  
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
@@ -317,9 +317,9 @@ class BuilderBase {
       num_nodes_ = FindMaxNodeID(el)+1;
     if (needs_weights_)
       Generator<NodeID_, DestID_, WeightT_>::InsertWeights(el);
-    if (false){ //!symmetrize_ && invert){
+    if (true){ //!symmetrize_ && invert){
       std::cout << "made it to MakeGraphFromEL if statement\n";
-      //MakeCSRInPlace(el, &index, &neighs, &inv_index, &inv_neighs);
+      MakeCSRInPlace(el, false, &index, &neighs, &inv_index, &inv_neighs);
     } else {
       MakeCSR(el, false, &index, &neighs);
       if (!symmetrize_ && invert){
