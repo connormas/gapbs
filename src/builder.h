@@ -206,8 +206,7 @@ class BuilderBase {
   usage low. We do this by repurposing the EdgeList pvector and 
   using it as the new neighbors array.
   */
-  void MakeCSRInPlace(EdgeList &el, DestID_*** index,
-               DestID_** neighs, DestID_*** inv_index, DestID_** inv_neighs) {
+  void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs) {
     
     // printing out initial EdgeList Object
     std::cout << "printing edgelist:\n";
@@ -219,16 +218,21 @@ class BuilderBase {
 
     // VARIABLE/OBJECT DECLARATIONS
     std::sort(el.begin(), el.end());
-    pvector<NodeID_> degrees = CountDegrees(el, invert);
+    pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     DestID_* overWriteEL = (DestID_*)el.data();	
     int elLength = el.size();    
     *neighs = (DestID_*)el.data();
-    
+ 
+    // printing for debugging    
+    for(int i = 0; i < offsets.size(); i++){
+      std::cout << "offsets " << i << ": " << offsets[i] << "\n";
+    }
+
     // OUT GOING NEIGHBORS
     for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
-      if (symmetrize_ || (!symmetrize_ && !invert)){
+      if (symmetrize_ || (!symmetrize_ && !transpose)){
         *overWriteEL = e.v;
         overWriteEL++;
       }
@@ -249,9 +253,9 @@ class BuilderBase {
 
     // FINISH BUILDING GRAPH OBJECT
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-    if(!symmetrize_ && invert){
-      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, overWriteEL);
-    }
+    //if(!symmetrize_ && invert){
+    //  *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, overWriteEL);
+    //}
 
     
     // printing out final result should be [outneighs : inneighs]
@@ -279,6 +283,7 @@ class BuilderBase {
       std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
       count++;
     }
+    MakeCSRInPlace(el, transpose, index, neighs);
 
     std::sort(el.begin(), el.end());  
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
@@ -312,13 +317,15 @@ class BuilderBase {
       num_nodes_ = FindMaxNodeID(el)+1;
     if (needs_weights_)
       Generator<NodeID_, DestID_, WeightT_>::InsertWeights(el);
-    if (!symmetrize_ && invert){
+    if (false){ //!symmetrize_ && invert){
       std::cout << "made it to MakeGraphFromEL if statement\n";
-      MakeCSRInPlace(el, &index, &neighs, &inv_index, &inv_neighs);
+      //MakeCSRInPlace(el, &index, &neighs, &inv_index, &inv_neighs);
     } else {
       MakeCSR(el, false, &index, &neighs);
-      if (!symmetrize_ && invert)
+      if (!symmetrize_ && invert){
+        std::cout << "INSIDE IF STATEMENT\n";
         MakeCSR(el, true, &inv_index, &inv_neighs);
+      }
     }
     t.Stop();
     PrintTime("Build Time", t.Seconds());
