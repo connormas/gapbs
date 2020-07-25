@@ -253,9 +253,9 @@ class BuilderBase {
 
     // FINISH BUILDING GRAPH OBJECT
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-    //if(!symmetrize_ && invert){
-    //  *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, overWriteEL);
-    //}
+    if(!symmetrize_ && invert){
+      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, overWriteEL);
+    }
 
     
     // printing out final result should be [outneighs : inneighs]
@@ -264,7 +264,6 @@ class BuilderBase {
     for(int i = 0; i < (2 * (int)elLength); i++, n++) {
       std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
     }
-    exit(1);
   }
 
   /*
