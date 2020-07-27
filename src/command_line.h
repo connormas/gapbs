@@ -30,13 +30,14 @@ class CLBase {
   int argc_;
   char** argv_;
   std::string name_;
-  std::string get_args_ = "f:g:hk:su:";
+  std::string get_args_ = "f:g:hk:su:m";
   std::vector<std::string> help_strings_;
 
   int scale_ = -1;
   int degree_ = 16;
   std::string filename_ = "";
   bool symmetrize_ = false;
+  bool lowmem_ = false;
   bool uniform_ = false;
 
   void AddHelpLine(char opt, std::string opt_arg, std::string text,
@@ -62,7 +63,7 @@ class CLBase {
     AddHelpLine('u', "scale", "generate 2^scale uniform-random graph");
     AddHelpLine('k', "degree", "average degree for synthetic graph",
                 std::to_string(degree_));
-    AddHelpLine('m', "", "graph building process uses less DRAM");
+    AddHelpLine('m', "", "lowers graph building process peak memory usage", "false");
   }
 
   bool ParseArgs() {
@@ -88,6 +89,7 @@ class CLBase {
       case 'k': degree_ = atoi(opt_arg);                    break;
       case 's': symmetrize_ = true;                         break;
       case 'u': uniform_ = true; scale_ = atoi(opt_arg);    break;
+      case 'm': lowmem_ = true;                             break;
     }
   }
 
@@ -103,6 +105,7 @@ class CLBase {
   int degree() const { return degree_; }
   std::string filename() const { return filename_; }
   bool symmetrize() const { return symmetrize_; }
+  bool lowmem() const { return lowmem_; }
   bool uniform() const { return uniform_; }
 };
 

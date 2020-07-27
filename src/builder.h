@@ -42,11 +42,13 @@ class BuilderBase {
   const CLBase &cli_;
   bool symmetrize_;
   bool needs_weights_;
+  bool lowmem_;
   int64_t num_nodes_ = -1;
 
  public:
   explicit BuilderBase(const CLBase &cli) : cli_(cli) {
     symmetrize_ = cli_.symmetrize();
+    lowmem_ = cli_.lowmem();
     needs_weights_ = !std::is_same<NodeID_, DestID_>::value;
   }
 
@@ -194,10 +196,11 @@ class BuilderBase {
       total += inoffsets[i];
       inoffsets[i] = total;
     }
-    std::cout << "now printing inoffsets:\n";
+    // printing in offsets for debugging
+    /*std::cout << "now printing inoffsets:\n";
     for(int i = 0; i < (int)inoffsets.size(); i++){
       std::cout << i << ": " << inoffsets[i] << "\n";
-    }
+    }*/
     return inoffsets;
   }
   
@@ -209,12 +212,12 @@ class BuilderBase {
   void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs, //) {
                       DestID_*** inv_index, DestID_** inv_neighs){
     // printing out initial EdgeList Object
-    std::cout << "printing edgelist:\n";
+    /*std::cout << "printing edgelist:\n";
     int count = 0;
     for (auto it = el.begin(); it < el.end(); it++) {
       std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
       count++;
-    }
+    }*/
 
     // VARIABLE/OBJECT DECLARATIONS
     std::sort(el.begin(), el.end());
@@ -225,9 +228,9 @@ class BuilderBase {
     *neighs = (DestID_*)el.data();
  
     // printing for debugging    
-    for(int i = 0; i < (int)offsets.size(); i++){
+    /*for(int i = 0; i < (int)offsets.size(); i++){
       std::cout << "offsets " << i << ": " << offsets[i] << "\n";
-    }
+    }*/
 
     // OUT GOING NEIGHBORS
     for(auto it = el.begin(); it < el.end(); it++){
@@ -260,10 +263,10 @@ class BuilderBase {
     
     // printing out final result should be [outneighs : inneighs]
     // will be removed later
-    DestID_* n = (DestID_*)el.data();
+    /*DestID_* n = (DestID_*)el.data();
     for(int i = 0; i < (2 * (int)elLength); i++, n++) {
       std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
-    }
+    }*/
   }
 
   /*
@@ -282,7 +285,6 @@ class BuilderBase {
       std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
       count++;
     }
-    //MakeCSRInPlace(el, transpose, index, neighs);
 
     std::sort(el.begin(), el.end());  
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
@@ -300,11 +302,9 @@ class BuilderBase {
     }
     
     // printing out final result should be [outneighs : inneighs]
-    // will be removed later	
-    for(int i = 0; i < 12; i++){
+    /*for(int i = 0; i < 12; i++){
       std::cout << "neighs from MakeCSR " <<  i << ": " << ((*neighs)[i]) << "\n";	
-    }
-    exit(1);
+    }*/
   }
 
   CSRGraph<NodeID_, DestID_, invert> MakeGraphFromEL(EdgeList &el) {
@@ -316,13 +316,11 @@ class BuilderBase {
       num_nodes_ = FindMaxNodeID(el)+1;
     if (needs_weights_)
       Generator<NodeID_, DestID_, WeightT_>::InsertWeights(el);
-    if (true){ //!symmetrize_ && invert){
-      std::cout << "made it to MakeGraphFromEL if statement\n";
+    if (lowmem_){ //!symmetrize_ && invert){
       MakeCSRInPlace(el, false, &index, &neighs, &inv_index, &inv_neighs);
     } else {
       MakeCSR(el, false, &index, &neighs);
       if (!symmetrize_ && invert){
-        std::cout << "INSIDE IF STATEMENT\n";
         MakeCSR(el, true, &inv_index, &inv_neighs);
       }
     }
