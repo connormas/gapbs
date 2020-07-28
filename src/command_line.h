@@ -30,14 +30,13 @@ class CLBase {
   int argc_;
   char** argv_;
   std::string name_;
-  std::string get_args_ = "f:g:hk:su:m";
+  std::string get_args_ = "f:g:hk:su:";
   std::vector<std::string> help_strings_;
 
   int scale_ = -1;
   int degree_ = 16;
   std::string filename_ = "";
   bool symmetrize_ = false;
-  bool lowmem_ = false;
   bool uniform_ = false;
 
   void AddHelpLine(char opt, std::string opt_arg, std::string text,
@@ -54,6 +53,9 @@ class CLBase {
   }
 
  public:
+  
+  bool lowmem();
+  
   CLBase(int argc, char** argv, std::string name = "") :
          argc_(argc), argv_(argv), name_(name) {
     AddHelpLine('h', "", "print this help message");
@@ -63,7 +65,6 @@ class CLBase {
     AddHelpLine('u', "scale", "generate 2^scale uniform-random graph");
     AddHelpLine('k', "degree", "average degree for synthetic graph",
                 std::to_string(degree_));
-    AddHelpLine('m', "", "lowers graph building process peak memory usage", "false");
   }
 
   bool ParseArgs() {
@@ -89,7 +90,6 @@ class CLBase {
       case 'k': degree_ = atoi(opt_arg);                    break;
       case 's': symmetrize_ = true;                         break;
       case 'u': uniform_ = true; scale_ = atoi(opt_arg);    break;
-      case 'm': lowmem_ = true;                             break;
     }
   }
 
@@ -105,7 +105,6 @@ class CLBase {
   int degree() const { return degree_; }
   std::string filename() const { return filename_; }
   bool symmetrize() const { return symmetrize_; }
-  bool lowmem() const { return lowmem_; }
   bool uniform() const { return uniform_; }
 };
 
@@ -228,12 +227,16 @@ class CLConvert : public CLBase {
   bool out_sg_ = false;
 
  public:
+
+  bool lowmem_ = false;
+
   CLConvert(int argc, char** argv, std::string name)
       : CLBase(argc, argv, name) {
-    get_args_ += "e:b:w";
+    get_args_ += "e:b:wm";
     AddHelpLine('b', "file", "output serialized graph to file");
     AddHelpLine('e', "file", "output edge list to file");
     AddHelpLine('w', "file", "make output weighted");
+    AddHelpLine('m', "", "lowers graph building process peak memory usage", "false");
   }
 
   void HandleArg(signed char opt, char* opt_arg) override {
@@ -241,6 +244,7 @@ class CLConvert : public CLBase {
       case 'b': out_sg_ = true; out_filename_ = std::string(opt_arg);   break;
       case 'e': out_el_ = true; out_filename_ = std::string(opt_arg);   break;
       case 'w': out_weighted_ = true;                                   break;
+      case 'm': lowmem_ = true;                                         break;
       default: CLBase::HandleArg(opt, opt_arg);
     }
   }
@@ -249,6 +253,7 @@ class CLConvert : public CLBase {
   bool out_weighted() const { return out_weighted_; }
   bool out_el() const { return out_el_; }
   bool out_sg() const { return out_sg_; }
+  bool lowmem() const { return lowmem_; } 
 };
 
 #endif  // COMMAND_LINE_H_

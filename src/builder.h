@@ -42,13 +42,13 @@ class BuilderBase {
   const CLBase &cli_;
   bool symmetrize_;
   bool needs_weights_;
-  bool lowmem_;
+  bool inPlace_ = false;
   int64_t num_nodes_ = -1;
+
 
  public:
   explicit BuilderBase(const CLBase &cli) : cli_(cli) {
     symmetrize_ = cli_.symmetrize();
-    lowmem_ = cli_.lowmem();
     needs_weights_ = !std::is_same<NodeID_, DestID_>::value;
   }
 
@@ -235,10 +235,10 @@ class BuilderBase {
     // OUT GOING NEIGHBORS
     for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
-      if (symmetrize_ || (!symmetrize_ && !transpose)){
-        *overWriteEL = e.v;
-        overWriteEL++;
-      }
+      //if (symmetrize_ || (!symmetrize_ && !transpose)){
+      *overWriteEL = e.v;
+      overWriteEL++;
+      //}
     }
 
     // INCOMING NEIGHBORS 
@@ -253,11 +253,11 @@ class BuilderBase {
         (overWriteEL)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
       }
     }
-
+    inv_neighs = &overWriteEL;
     // FINISH BUILDING GRAPH OBJECT
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     if(!symmetrize_ && invert){
-      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, overWriteEL);
+      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
     }
 
     
@@ -278,20 +278,12 @@ class BuilderBase {
   */
   void MakeCSR(const EdgeList &el, bool transpose, DestID_*** index,
                DestID_** neighs) {
-    // printing out inital EdgeList Object
-    std::cout << "printing edgelist:\n";
-    int count = 0;
-    for (auto it = el.begin(); it < el.end(); it++) {
-      std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
-      count++;
-    }
-
     std::sort(el.begin(), el.end());  
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     *neighs = new DestID_[offsets[num_nodes_]];
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-
+    #pragma omp parallel for 
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
       if (symmetrize_ || (!symmetrize_ && !transpose))
@@ -300,11 +292,6 @@ class BuilderBase {
         (*neighs)[fetch_and_add(offsets[static_cast<NodeID_>(e.v)], 1)] =
             GetSource(e);
     }
-    
-    // printing out final result should be [outneighs : inneighs]
-    /*for(int i = 0; i < 12; i++){
-      std::cout << "neighs from MakeCSR " <<  i << ": " << ((*neighs)[i]) << "\n";	
-    }*/
   }
 
   CSRGraph<NodeID_, DestID_, invert> MakeGraphFromEL(EdgeList &el) {
@@ -316,7 +303,8 @@ class BuilderBase {
       num_nodes_ = FindMaxNodeID(el)+1;
     if (needs_weights_)
       Generator<NodeID_, DestID_, WeightT_>::InsertWeights(el);
-    if (lowmem_){ //!symmetrize_ && invert){
+    if (inPlace_){
+      std::cout << "MADE IT HERE\n";
       MakeCSRInPlace(el, false, &index, &neighs, &inv_index, &inv_neighs);
     } else {
       MakeCSR(el, false, &index, &neighs);
@@ -333,32 +321,10 @@ class BuilderBase {
                                                 inv_index, inv_neighs);
   }
 
-/*
-  CSRGraph<NodeID_, DestID_, invert> MakeGraphFromEL(EdgeList &el) {
-    DestID_ **index = nullptr, **inv_index = nullptr;
-    DestID_ *neighs = nullptr, *inv_neighs = nullptr;
-    Timer t;
-    t.Start();
-    if (num_nodes_ == -1)
-      num_nodes_ = FindMaxNodeID(el)+1;
-    if (needs_weights_)
-      Generator<NodeID_, DestID_, WeightT_>::InsertWeights(el);
-    MakeCSR(el, false, &index, &neighs);
-    if (!symmetrize_ && invert)
-      MakeCSR(el, true, &inv_index, &inv_neighs);
-    t.Stop();
-    PrintTime("Build Time", t.Seconds());
-    if (symmetrize_)
-      return CSRGraph<NodeID_, DestID_, invert>(num_nodes_, index, neighs);
-    else
-      return CSRGraph<NodeID_, DestID_, invert>(num_nodes_, index, neighs,
-                                                inv_index, inv_neighs);
-  }
-*/
-
-  CSRGraph<NodeID_, DestID_, invert> MakeGraph() {
+  CSRGraph<NodeID_, DestID_, invert> MakeGraph(bool inPlace=false) {
     CSRGraph<NodeID_, DestID_, invert> g;
     {  // extra scope to trigger earlier deletion of el (save memory)
+      std::cout << inPlace << "\n";
       EdgeList el;
       if (cli_.filename() != "") {
         Reader<NodeID_, DestID_, WeightT_, invert> r(cli_.filename());
