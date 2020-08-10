@@ -170,6 +170,7 @@ class BuilderBase {
     if (g.directed()) {
       if (invert)
         SquishCSR(g, true, &in_index, &in_neighs);
+      
       return CSRGraph<NodeID_, DestID_, invert>(g.num_nodes(), out_index,
                                                 out_neighs, in_index,
                                                 in_neighs);
@@ -211,62 +212,78 @@ class BuilderBase {
   */
   void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs, //) {
                       DestID_*** inv_index, DestID_** inv_neighs){
-    // printing out initial EdgeList Object
-    /*std::cout << "printing edgelist:\n";
-    int count = 0;
-    for (auto it = el.begin(); it < el.end(); it++) {
-      std::cout << "pair " << count << ": (" << (*it).u << ", " << (*it).v << ")\n";
-      count++;
-    }*/
 
     // VARIABLE/OBJECT DECLARATIONS
     std::sort(el.begin(), el.end());
     pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
+    
+    pvector<SGOffset> inoffsets;
     DestID_* overWriteEL = (DestID_*)el.data();	
-    int elLength = el.size();    
     *neighs = (DestID_*)el.data();
- 
-    // printing for debugging    
-    /*for(int i = 0; i < (int)offsets.size(); i++){
-      std::cout << "offsets " << i << ": " << offsets[i] << "\n";
-    }*/
+    int elLength = el.size();    
+    *inv_neighs = overWriteEL; 
 
     // OUT GOING NEIGHBORS
-    for(auto it = el.begin(); it < el.end(); it++){
-      Edge e = *it;
-      //if (symmetrize_ || (!symmetrize_ && !transpose)){
-      *overWriteEL = e.v;
-      overWriteEL++;
-      //}
-    }
 
-    // INCOMING NEIGHBORS 
-    pvector<SGOffset> inoffsets = MakeOffsetsFromOutNeighs(el, elLength);
-    
-    //over write in-neighs to EdgeList
-    auto deg = degrees.data();
-    DestID_* N = (DestID_*)el.data();
-    int neighbor = 0;
-    for(int i = 0; i < (int)degrees.size(); i++, deg++, neighbor++){
-      for(int _ = 0; _ < (int)(*deg); _++, N++){
-        (overWriteEL)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
-      }
-    }
-    inv_neighs = &overWriteEL;
-    // FINISH BUILDING GRAPH OBJECT
+    /*
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-    if(!symmetrize_ && invert){
+    if(!symmetrize_){
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
     }
+    */
 
+    //overwrite EdgeList memory
+    std::cout << "*neighs (BEFORE out neighs written): " << *neighs << std::endl;
+    for(auto it = el.begin(); it < el.end(); it++){
+      Edge e = *it;
+      if (symmetrize_ || (!symmetrize_ && !transpose)){
+        std::cout << "in loop, writing to el memory: " << e.u << ", " << e.v;
+        std::cout << " and offsets[e.u] = " << offsets[e.u] << std::endl;
+        *overWriteEL = e.v;
+        overWriteEL++;
+        //(*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
+      }
+    }
+    *neighs = (DestID_*)std::realloc((DestID_*)el.data(), (el.size() * sizeof(DestID_)));
+
+    // INCOMING NEIGHBORS
+    inoffsets = MakeOffsetsFromOutNeighs(el, elLength);
+    *inv_neighs = new DestID_[inoffsets[num_nodes_]];
+    std::cout << "inoffsets[num_nodes_] = " << inoffsets[num_nodes_] << std::endl;
+    std::cout << "*inv_neighs (BEFORE in neighs written): " << *inv_neighs << std::endl;
+    if (!symmetrize_) {
+      // write in-neighs to new malloc'd memory
+      auto deg = degrees.data();
+      DestID_* N = (DestID_*)el.data();
+      int neighbor = 0;
+      for(int i = 0; i < (int)degrees.size(); i++, deg++, neighbor++){
+        for(int _ = 0; _ < (int)(*deg); _++, N++){
+          (*inv_neighs)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
+        }
+      }
+    }
+
+    std::cout << "*neighs (AFTER out neighs written: " << *neighs << "\n";
+    std::cout << "*inv_neighs (AFTER in neighs written): " << *inv_neighs << std::endl;
+    // FINISH BUILDING GRAPH OBJECT
+    *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
+    if(!symmetrize_){
+      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
+    }
     
     // printing out final result should be [outneighs : inneighs]
     // will be removed later
-    /*DestID_* n = (DestID_*)el.data();
-    for(int i = 0; i < (2 * (int)elLength); i++, n++) {
-      std::cout << "neighs from MakeCSRInPlace " << i << ": " << *n << "\n";
-    }*/
+    DestID_* n = (DestID_*)el.data();
+    for(int i = 0; i < (int)elLength; i++, n++) {
+      std::cout << "MakeCSRInPlace " << i << ": " << *n << "\n";
+    }
+    if(!symmetrize_){
+      n = inv_neighs[0];
+      for(int i = 0; i < (int)elLength; i++, n++) {
+        std::cout << "MakeCSRInPlace " << i << ": " << *n << "\n";
+      }
+    }
   }
 
   /*
@@ -282,7 +299,11 @@ class BuilderBase {
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     *neighs = new DestID_[offsets[num_nodes_]];
+    std::cout << "1. *neighs: " << *neighs << std::endl;
+    std::cout << "1. offsets: " << &offsets << std::endl;
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
+    std::cout << "2. *neighs: " << *neighs << "\n";
+    std::cout << "2. offsets: " << &offsets << std::endl;
     #pragma omp parallel for 
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
@@ -291,6 +312,12 @@ class BuilderBase {
       if (symmetrize_ || (!symmetrize_ && transpose))
         (*neighs)[fetch_and_add(offsets[static_cast<NodeID_>(e.v)], 1)] =
             GetSource(e);
+    }
+
+    std::cout << "3. *neighs: " << *neighs << "\n";
+    std::cout << "3. offsets: " << &offsets << std::endl;
+    for(int i = 0; i < (int)el.size(); i++){
+      std::cout << "MakeCSR " << i << " " << ((*neighs)[i]) << "\n";
     }
   }
 
@@ -304,7 +331,6 @@ class BuilderBase {
     if (needs_weights_)
       Generator<NodeID_, DestID_, WeightT_>::InsertWeights(el);
     if (inPlace_){
-      std::cout << "MADE IT HERE\n";
       MakeCSRInPlace(el, false, &index, &neighs, &inv_index, &inv_neighs);
     } else {
       MakeCSR(el, false, &index, &neighs);
@@ -314,17 +340,20 @@ class BuilderBase {
     }
     t.Stop();
     PrintTime("Build Time", t.Seconds());
-    if (symmetrize_)
+    if (symmetrize_){
+      std::cout << "returning graph w/ out inv index/neighs\n";
       return CSRGraph<NodeID_, DestID_, invert>(num_nodes_, index, neighs);
-    else
+    } else {
+      std::cout << "returning graph with inv index/neighs\n";
       return CSRGraph<NodeID_, DestID_, invert>(num_nodes_, index, neighs,
                                                 inv_index, inv_neighs);
+    }
   }
 
-  CSRGraph<NodeID_, DestID_, invert> MakeGraph(bool inPlace=false) {
+  CSRGraph<NodeID_, DestID_, invert> MakeGraph(bool mFlag=false) {
     CSRGraph<NodeID_, DestID_, invert> g;
     {  // extra scope to trigger earlier deletion of el (save memory)
-      std::cout << inPlace << "\n";
+      inPlace_ = mFlag;
       EdgeList el;
       if (cli_.filename() != "") {
         Reader<NodeID_, DestID_, WeightT_, invert> r(cli_.filename());
@@ -337,9 +366,16 @@ class BuilderBase {
         Generator<NodeID_, DestID_> gen(cli_.scale(), cli_.degree());
         el = gen.GenerateEL(cli_.uniform());
       }
+      std::cout << "calling MakeGraphFromEL\n";
       g = MakeGraphFromEL(el);
+      std::cout << "done w/ MakeGraphFromEL and ABOUT TO FREE EL MEMORY\n";
     }
-    return SquishGraph(g);
+    //can be taken out later, or modify squishgraph()
+    std::cout << "calling squishgraph\n";
+    if(true)
+      return SquishGraph(g);
+    else
+      return g;
   }
 
   // Relabels (and rebuilds) graph by order of decreasing degree

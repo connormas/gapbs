@@ -30,6 +30,7 @@ class pvector {
     start_ = new T_[num_elements];
     end_size_ = start_ + num_elements;
     end_capacity_ = end_size_;
+    buildInPlace = false;
   }
 
   pvector(size_t num_elements, T_ init_val) : pvector(num_elements) {
@@ -67,7 +68,7 @@ class pvector {
   }
 
   ~pvector() {
-    if (start_ != nullptr)
+    if (start_ != nullptr && false)
       delete[] start_;
   }
 
@@ -83,6 +84,10 @@ class pvector {
       start_ = new_range;
       end_capacity_ = start_ + num_elements;
     }
+  }
+    
+  void inPlace(pvector &p) {
+    p.buildInPlace = true;
   }
 
   bool empty() {
@@ -152,6 +157,7 @@ class pvector {
   T_* start_;
   T_* end_size_;
   T_* end_capacity_;
+  bool buildInPlace;
   static const size_t growth_factor = 2;
 };
 
