@@ -197,11 +197,6 @@ class BuilderBase {
       total += inoffsets[i];
       inoffsets[i] = total;
     }
-    // printing in offsets for debugging
-    /*std::cout << "now printing inoffsets:\n";
-    for(int i = 0; i < (int)inoffsets.size(); i++){
-      std::cout << i << ": " << inoffsets[i] << "\n";
-    }*/
     return inoffsets;
   }
   
@@ -210,7 +205,7 @@ class BuilderBase {
   usage low. We do this by repurposing the EdgeList pvector and 
   using it as the new neighbors array.
   */
-  void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs, //) {
+  void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs,
                       DestID_*** inv_index, DestID_** inv_neighs){
 
     // VARIABLE/OBJECT DECLARATIONS
@@ -223,15 +218,8 @@ class BuilderBase {
     *neighs = (DestID_*)el.data();
     int elLength = el.size();    
     *inv_neighs = overWriteEL; 
-
+    
     // OUT GOING NEIGHBORS
-
-    /*
-    *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-    if(!symmetrize_){
-      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
-    }
-    */
 
     //overwrite EdgeList memory
     std::cout << "*neighs (BEFORE out neighs written): " << *neighs << std::endl;
@@ -245,14 +233,21 @@ class BuilderBase {
         //(*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
       }
     }
+    // realloc to proper size
+    // make sure can handle weighted edges too
     *neighs = (DestID_*)std::realloc((DestID_*)el.data(), (el.size() * sizeof(DestID_)));
+    *inv_neighs = new DestID_[inoffsets[num_nodes_]];
+
+    *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
+    if(!symmetrize_){
+      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
+    }
 
     // INCOMING NEIGHBORS
     inoffsets = MakeOffsetsFromOutNeighs(el, elLength);
-    *inv_neighs = new DestID_[inoffsets[num_nodes_]];
     std::cout << "inoffsets[num_nodes_] = " << inoffsets[num_nodes_] << std::endl;
     std::cout << "*inv_neighs (BEFORE in neighs written): " << *inv_neighs << std::endl;
-    if (!symmetrize_) {
+    if (!symmetrize_) {   //((symmetrize_ || (!symmetrize_ && !transpose))) {
       // write in-neighs to new malloc'd memory
       auto deg = degrees.data();
       DestID_* N = (DestID_*)el.data();
@@ -267,12 +262,12 @@ class BuilderBase {
     std::cout << "*neighs (AFTER out neighs written: " << *neighs << "\n";
     std::cout << "*inv_neighs (AFTER in neighs written): " << *inv_neighs << std::endl;
     // FINISH BUILDING GRAPH OBJECT
-    *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
+    /**index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     if(!symmetrize_){
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
-    }
+    }*/
     
-    // printing out final result should be [outneighs : inneighs]
+    // printing out final result should be outneighs then inneighs
     // will be removed later
     DestID_* n = (DestID_*)el.data();
     for(int i = 0; i < (int)elLength; i++, n++) {
