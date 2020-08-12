@@ -19,7 +19,7 @@
 #include "reader.h"
 #include "timer.h"
 #include "util.h"
-  
+
 /*
 GAP Benchmark Suite
 Class:  BuilderBase
@@ -170,7 +170,7 @@ class BuilderBase {
     if (g.directed()) {
       if (invert)
         SquishCSR(g, true, &in_index, &in_neighs);
-      
+
       return CSRGraph<NodeID_, DestID_, invert>(g.num_nodes(), out_index,
                                                 out_neighs, in_index,
                                                 in_neighs);
@@ -179,15 +179,16 @@ class BuilderBase {
                                                 out_neighs);
     }
   }
-  
+
   /*
   This function takes an EdgeList Obj by reference. It assumes this is an edgelist that
   has been partially overwritten with the outneighs of the original EdgeList data. This code
-  makes and returns a pvector called inoffsets that will contain the offsets for writing the 
-  inneighs to the memory previously containing the edgelist.
+  makes and returns a pvector called inoffsets that will contain the offsets for writing the
+  inneighs.
+  NOTE: not currently being used, may be cut out eventually
   */
   pvector<SGOffset> MakeOffsetsFromOutNeighs(const EdgeList &el, int elLength){
-    pvector<SGOffset> inoffsets(num_nodes_ + 1, 0); 
+    pvector<SGOffset> inoffsets(num_nodes_ + 1, 0);
     DestID_* N = (DestID_*)el.data();
     int total = 0;
     for(int i = 0; i < (int)elLength; i++, N++){
@@ -199,10 +200,10 @@ class BuilderBase {
     }
     return inoffsets;
   }
-  
-  /* 
-  Code that attempts to build in-place and keep peak mem 
-  usage low. We do this by repurposing the EdgeList pvector and 
+
+  /*
+  Code that attempts to build in-place and keep peak mem
+  usage low. We do this by repurposing the EdgeList pvector and
   using it as the new neighbors array.
   */
   void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs,
@@ -212,13 +213,13 @@ class BuilderBase {
     std::sort(el.begin(), el.end());
     pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
-    
-    pvector<SGOffset> inoffsets;
-    DestID_* overWriteEL = (DestID_*)el.data();	
+    pvector<NodeID_> indegrees = CountDegrees(el, true);
+    pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
+    DestID_* overWriteEL = (DestID_*)el.data();
     *neighs = (DestID_*)el.data();
-    int elLength = el.size();    
-    *inv_neighs = overWriteEL; 
-    
+    int elLength = el.size();
+    *inv_neighs = overWriteEL;
+
     // OUT GOING NEIGHBORS
 
     //overwrite EdgeList memory
@@ -235,12 +236,11 @@ class BuilderBase {
     }
     // realloc to proper size
     // make sure can handle weighted edges too
-    *neighs = (DestID_*)std::realloc((DestID_*)el.data(), (el.size() * sizeof(DestID_)));
+    *neighs = (DestID_*)std::realloc((DestID_*)el.data(), (elLength * sizeof(DestID_)));
 
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
 
     // INCOMING NEIGHBORS
-    inoffsets = MakeOffsetsFromOutNeighs(el, elLength);
     *inv_neighs = new DestID_[inoffsets[num_nodes_]];
     std::cout << "inoffsets[num_nodes_] = " << inoffsets[num_nodes_] << std::endl;
     std::cout << "*inv_neighs (BEFORE in neighs written): " << *inv_neighs << std::endl;
@@ -263,7 +263,7 @@ class BuilderBase {
     if(!symmetrize_){
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
     }
-    
+
     // printing out final result should be outneighs then inneighs
     // will be removed later
     DestID_* n = (DestID_*)el.data();
@@ -287,7 +287,7 @@ class BuilderBase {
   */
   void MakeCSR(const EdgeList &el, bool transpose, DestID_*** index,
                DestID_** neighs) {
-    std::sort(el.begin(), el.end());  
+    std::sort(el.begin(), el.end());
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     *neighs = new DestID_[offsets[num_nodes_]];
@@ -296,7 +296,7 @@ class BuilderBase {
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     std::cout << "2. *neighs: " << *neighs << "\n";
     std::cout << "2. offsets: " << &offsets << std::endl;
-    #pragma omp parallel for 
+    #pragma omp parallel for
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
       if (symmetrize_ || (!symmetrize_ && !transpose))
