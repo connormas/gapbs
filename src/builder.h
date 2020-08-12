@@ -236,15 +236,12 @@ class BuilderBase {
     // realloc to proper size
     // make sure can handle weighted edges too
     *neighs = (DestID_*)std::realloc((DestID_*)el.data(), (el.size() * sizeof(DestID_)));
-    *inv_neighs = new DestID_[inoffsets[num_nodes_]];
 
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-    if(!symmetrize_){
-      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
-    }
 
     // INCOMING NEIGHBORS
     inoffsets = MakeOffsetsFromOutNeighs(el, elLength);
+    *inv_neighs = new DestID_[inoffsets[num_nodes_]];
     std::cout << "inoffsets[num_nodes_] = " << inoffsets[num_nodes_] << std::endl;
     std::cout << "*inv_neighs (BEFORE in neighs written): " << *inv_neighs << std::endl;
     if (!symmetrize_) {   //((symmetrize_ || (!symmetrize_ && !transpose))) {
@@ -262,10 +259,10 @@ class BuilderBase {
     std::cout << "*neighs (AFTER out neighs written: " << *neighs << "\n";
     std::cout << "*inv_neighs (AFTER in neighs written): " << *inv_neighs << std::endl;
     // FINISH BUILDING GRAPH OBJECT
-    /**index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
+    *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     if(!symmetrize_){
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
-    }*/
+    }
     
     // printing out final result should be outneighs then inneighs
     // will be removed later
