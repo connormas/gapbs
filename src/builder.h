@@ -211,58 +211,83 @@ class BuilderBase {
 
     // VARIABLE/OBJECT DECLARATIONS
     std::sort(el.begin(), el.end());
+    for(auto it = el.begin(); it < el.end(); it++){
+      Edge e = *it;
+      std::cout << "(" << e.u << ", " << e.v << ") ";
+    }
+    std::cout << std::endl;
     pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     pvector<NodeID_> indegrees = CountDegrees(el, true);
-    pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
+    //pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
     DestID_* overWriteEL = (DestID_*)el.data();
     *neighs = (DestID_*)el.data();
     int elLength = el.size();
     *inv_neighs = overWriteEL;
-
     // OUT GOING NEIGHBORS
 
     //overwrite EdgeList memory
-    std::cout << "*neighs (BEFORE out neighs written): " << *neighs << std::endl;
+    //*index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
+
     for(auto it = el.begin(); it < el.end(); it++){
       Edge e = *it;
+      //auto eu = e.u;
+      auto ev = e.v;
+      for(int i = 0; i < offsets.size(); i++){
+        std::cout << offsets[i] << " ";
+      }
+      std::cout << "(" << e.u << ", " << e.v << ") <-- ";
+      for(auto itt = el.begin(); itt < el.end(); itt++){
+        Edge ee = *itt;
+        std::cout << "(" << ee.u << ", " << ee.v << ") ";
+      }
+      std::cout << std::endl;
+
       if (symmetrize_ || (!symmetrize_ && !transpose)){
-        std::cout << "in loop, writing to el memory: " << e.u << ", " << e.v;
-        std::cout << " and offsets[e.u] = " << offsets[e.u] << std::endl;
-        *overWriteEL = e.v;
-        overWriteEL++;
-        //(*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
+        (*neighs)[fetch_and_add(offsets[e.u], 1)] = ev;
       }
     }
+    //revert offsets
+    std::cout << std::endl;
+    for(int i = offsets.size(); i >= 0; i--){
+        offsets[i] = i != 0 ? offsets[i-1] : offsets[i] = 0;
+    }
+
     // realloc to proper size
     // make sure can handle weighted edges too
-    *neighs = (DestID_*)std::realloc((DestID_*)el.data(), (elLength * sizeof(DestID_)));
+    if(!symmetrize_){
+      std::cout << "realloc\n";
+      *neighs = (DestID_*)std::realloc((DestID_*)el.data(), (elLength * sizeof(DestID_)));
+    } else {
+      std::cout << "realloc to twice the size\n";
+      *neighs = (DestID_*)std::realloc((DestID_*)el.data(), 2 * (elLength * sizeof(DestID_)));
+    }
 
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
+    pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
+    if((symmetrize_ || (!symmetrize_ && transpose))){//(!symmetrize_){
+      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
+    }
 
     // INCOMING NEIGHBORS
     *inv_neighs = new DestID_[inoffsets[num_nodes_]];
-    std::cout << "inoffsets[num_nodes_] = " << inoffsets[num_nodes_] << std::endl;
-    std::cout << "*inv_neighs (BEFORE in neighs written): " << *inv_neighs << std::endl;
-    if (!symmetrize_) {   //((symmetrize_ || (!symmetrize_ && !transpose))) {
+    if (!symmetrize_) {
       // write in-neighs to new malloc'd memory
+      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
       auto deg = degrees.data();
       DestID_* N = (DestID_*)el.data();
       int neighbor = 0;
       for(int i = 0; i < (int)degrees.size(); i++, deg++, neighbor++){
-        for(int _ = 0; _ < (int)(*deg); _++, N++){
+        for(int j = 0; j < (int)(*deg); j++, N++){
           (*inv_neighs)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
         }
       }
     }
 
-    std::cout << "*neighs (AFTER out neighs written: " << *neighs << "\n";
-    std::cout << "*inv_neighs (AFTER in neighs written): " << *inv_neighs << std::endl;
     // FINISH BUILDING GRAPH OBJECT
-    *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-    if(!symmetrize_){
+    /*if(!symmetrize_){
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
-    }
+    }*/
 
     // printing out final result should be outneighs then inneighs
     // will be removed later
@@ -291,23 +316,36 @@ class BuilderBase {
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     *neighs = new DestID_[offsets[num_nodes_]];
-    std::cout << "1. *neighs: " << *neighs << std::endl;
-    std::cout << "1. offsets: " << &offsets << std::endl;
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-    std::cout << "2. *neighs: " << *neighs << "\n";
-    std::cout << "2. offsets: " << &offsets << std::endl;
+
+    std::cout << "OFFSETS BEFORE: ";
+    for(int i = 0; i < offsets.size(); i++){
+      std::cout << offsets[i] << " ";
+    }
+    std::cout << std::endl;
+
     #pragma omp parallel for
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
-      if (symmetrize_ || (!symmetrize_ && !transpose))
+      std::cout << "(" << e.u << ", " << e.v << ") ";
+      if (symmetrize_ || (!symmetrize_ && !transpose)){
+        std::cout << "1 ";
         (*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
-      if (symmetrize_ || (!symmetrize_ && transpose))
+      }
+      if (symmetrize_ || (!symmetrize_ && transpose)){
+        std::cout << "2 " << offsets[static_cast<NodeID_>(e.v)] << " " << e.v;
         (*neighs)[fetch_and_add(offsets[static_cast<NodeID_>(e.v)], 1)] =
             GetSource(e);
+      }
+      std::cout << std::endl;
     }
+    std::cout << "OFFSETS AFTER: ";
+    for(int i = 0; i < offsets.size(); i++){
+      std::cout << offsets[i] << " ";
+    }
+    std::cout << std::endl;
 
-    std::cout << "3. *neighs: " << *neighs << "\n";
-    std::cout << "3. offsets: " << &offsets << std::endl;
+    // print back out the neighbors we just wrote
     for(int i = 0; i < (int)el.size(); i++){
       std::cout << "MakeCSR " << i << " " << ((*neighs)[i]) << "\n";
     }
@@ -364,10 +402,7 @@ class BuilderBase {
     }
     //can be taken out later, or modify squishgraph()
     std::cout << "calling squishgraph\n";
-    if(true)
-      return SquishGraph(g);
-    else
-      return g;
+    return SquishGraph(g);
   }
 
   // Relabels (and rebuilds) graph by order of decreasing degree
