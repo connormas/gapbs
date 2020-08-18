@@ -287,7 +287,7 @@ class BuilderBase {
 
     // INCOMING NEIGHBORS
     *inv_neighs = new DestID_[inoffsets[num_nodes_]];
-    if (!symmetrize_) {
+    if (true) { //(!symmetrize_) {
       // write in-neighs to new malloc'd memory
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
       auto deg = degrees.data();
