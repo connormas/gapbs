@@ -263,7 +263,7 @@ class BuilderBase {
     //revert offsets
     std::cout << std::endl;
     for(int i = offsets.size(); i >= 0; i--){
-        offsets[i] = i != 0 ? offsets[i-1] : offsets[i] = 0;
+        offsets[i] = i != 0 ? offsets[i-1] : 0;
     }
 
     // realloc to proper size
@@ -291,7 +291,9 @@ class BuilderBase {
       // write in-neighs to new malloc'd memory
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
       auto deg = degrees.data();
-      DestID_* N = (DestID_*)el.data();
+      //DestID_* N = (DestID_*)el.data();
+      DestID_* N = (DestID_*)(neighs[0]);
+      //std::cout << "N: " << (DestID_*)el.data() << " using neighs: " <<  (DestID_*)(neighs[0]) << std::endl;
       int neighbor = 0;
       for(int i = 0; i < (int)degrees.size(); i++, deg++, neighbor++){
         for(int j = 0; j < (int)(*deg); j++, N++){
