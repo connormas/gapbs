@@ -137,3 +137,11 @@ void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index, DestID
   		overWriteEL = GetSource(e);
 		overWriteEL++;
 }
+
+Notes 8-19-20
+
+symmetrize options
+- two offsets 
+- check if edge already exists during first pass, add to some other pvector
+- build graph one way, check if inverse edges exist, add to list if they dont exist
+  then add back and sort again
