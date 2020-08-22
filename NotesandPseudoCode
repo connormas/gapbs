@@ -145,3 +145,21 @@ symmetrize options
 - check if edge already exists during first pass, add to some other pvector
 - build graph one way, check if inverse edges exist, add to list if they dont exist
   then add back and sort again
+
+Scott's proposed algorithm
+ 1. for all edges, local search to check if invers needed
+ 2. make luist of needed edge editions
+ 3. adjust offsets, fill in neighbors from back to front
+ 4. resort local neighbors, (this could be done in the prev step) 
+
+Pseudocode for Scott's algorithm 8-21-2020
+
+1. 
+pvector<Edge> neededInverseEdges
+for v in vertices:
+- for n in outneighs:
+- - for outneighs of n:
+- - - if v is not outneigh of n:
+- - - - add Edge(n, v) to neededInverseEdges
+
+
