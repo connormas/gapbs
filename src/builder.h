@@ -219,6 +219,7 @@ class BuilderBase {
     *neighs = (DestID_*)el.data();
     int elLength = el.size();
     *inv_neighs = overWriteEL;
+
     // OUT GOING NEIGHBORS
     for(int i = 0; i < offsets.size(); i++){
       std::cout << offsets[i] << " ";
@@ -231,34 +232,13 @@ class BuilderBase {
     std::cout << std::endl;
 
     //overwrite EdgeList memory
-    for(auto it = el.begin(); it < el.end(); it++){
+    for(auto it = el.begin(); it < el.end(); it++){  //(Edge e : el){
       Edge e = *it;
       auto ev = e.v;
-      /*for(int i = 0; i < offsets.size(); i++){
-        std::cout << offsets[i] << " ";
-      }
-      std::cout << "(" << e.u << ", " << e.v << ") <-- ";
-      for(auto itt = el.begin(); itt < el.end(); itt++){
-        Edge ee = *itt;
-        std::cout << "(" << ee.u << ", " << ee.v << ") ";
-      }
-      std::cout << std::endl;*/
-
       if (symmetrize_ || (!symmetrize_ && !transpose)){
         (*neighs)[fetch_and_add(offsets[e.u], 1)] = ev;
       }
     }
-
-    //printing for debugging
-    for(int i = 0; i < offsets.size(); i++){
-      std::cout << offsets[i] << " ";
-    }
-    std::cout << std::endl;
-    for(auto it = el.begin(); it < el.end(); it++){
-      Edge e = *it;
-      std::cout << "(" << e.u << ", " << e.v << ") ";
-    }
-    std::cout << std::endl;
 
     //revert offsets
     std::cout << std::endl;
@@ -273,27 +253,25 @@ class BuilderBase {
     else
       *neighs = (DestID_*)std::realloc((DestID_*)el.data(), 2 * (elLength * sizeof(DestID_)));
 
-    std::cout << "calling GenIndex for offsets/neighs\n";
-    for(int i = 0; i < degrees.size(); i++){
-      std::cout << degrees[i] << " ";
-    }
-    std::cout << std::endl;
+
     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
-    if((symmetrize_ || (!symmetrize_ && transpose))){//(!symmetrize_){
-      std::cout << "calling GenIndex for inoffsets/inv_neighs\n";
+    for(int i = 0; i < inoffsets.size(); i++){
+      std::cout << inoffsets[i] << " ";
+    }
+    std::cout << "\n";
+    /*if(!symmetrize_){
+      std::cout << "in this if statement\n";
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
     }
-
+    std::cout << "GOT HERE";*/
     // INCOMING NEIGHBORS
-    *inv_neighs = new DestID_[inoffsets[num_nodes_]];
-    if (true) { //(!symmetrize_) {
+    if (!symmetrize_) {
       // write in-neighs to new malloc'd memory
+      *inv_neighs = new DestID_[inoffsets[num_nodes_]];
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
       auto deg = degrees.data();
-      //DestID_* N = (DestID_*)el.data();
       DestID_* N = (DestID_*)(neighs[0]);
-      //std::cout << "N: " << (DestID_*)el.data() << " using neighs: " <<  (DestID_*)(neighs[0]) << std::endl;
       int neighbor = 0;
       for(int i = 0; i < (int)degrees.size(); i++, deg++, neighbor++){
         for(int j = 0; j < (int)(*deg); j++, N++){
@@ -301,6 +279,40 @@ class BuilderBase {
         }
       }
     }
+
+    //FINISH SYMMETRIZE
+    //Scott's proposed algorithm
+    // 1. for all edges, local search to check if inverse needed
+    // 2. make luist of needed edge editions
+    // 3. adjust offsets, fill in neighbors from back to front
+    // 4. resort local neighbors, (this could be done in the prev step)
+    std::cout << "neighs ";
+    DestID_* n = neighs[0];
+    for(int i = 0; i < elLength; i++, n++){
+      std::cout << *n << " ";
+    }
+    std::cout << "\noffsets ";
+    for(int i = 0; i < offsets.size(); i++){
+      std::cout << offsets[i] << " ";
+    }
+    std::cout << "\n";
+
+    n = neighs[0];
+    pvector<Edge> missingInv;
+    for(int v = 0; v < offsets.size() - 1; v++){
+      int numOutNeighs = offsets[v+1] - offsets[v];
+      std::cout << "outneighs of " << v << ": ";
+      for(int i = 0; i < numOutNeighs; i++, n++){
+        DestID_* nOfN = neighs[0] + offsets[*n];
+        std::cout << "(" << *n << ")";
+        for(int nn = 0; nn < offsets[*n+1] - offsets[*n]; nn++, nOfN++){
+          std::cout << *nOfN << " ";
+        }
+        std::cout << "| ";
+      }
+      std::cout << std::endl;
+    }
+
     // printing out final result should be outneighs then inneighs
     // will be removed later
     /*DestID_* n = (DestID_*)el.data();
