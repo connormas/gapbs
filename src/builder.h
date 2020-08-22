@@ -305,13 +305,27 @@ class BuilderBase {
       for(int i = 0; i < numOutNeighs; i++, n++){
         DestID_* nOfN = neighs[0] + offsets[*n];
         std::cout << "(" << *n << ")";
+        bool add = true;
         for(int nn = 0; nn < offsets[*n+1] - offsets[*n]; nn++, nOfN++){
-          std::cout << *nOfN << " ";
+          if(*nOfN == v)
+            add = false;
+            break;
         }
-        std::cout << "| ";
+        if(add){
+          std::cout << " <" << *n << ", " << v << ">";
+          Edge e(*n, v);
+          missingInv.push_back(e);
+        }
+        std::cout << " | ";
       }
       std::cout << std::endl;
     }
+    std::cout << "\n\nmissingInv: ";
+    for(auto it = missingInv.begin(); it < missingInv.end(); it++){
+      Edge e = *it;
+      std::cout << "<" << e.u << ", " << e.v << "> ";
+    }
+    std::cout << "\n\n";
 
     // printing out final result should be outneighs then inneighs
     // will be removed later
