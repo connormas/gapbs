@@ -283,7 +283,7 @@ class BuilderBase {
     //FINISH SYMMETRIZE
     //Scott's proposed algorithm
     // 1. for all edges, local search to check if inverse needed
-    // 2. make luist of needed edge editions
+    // 2. make list of needed edge editions
     // 3. adjust offsets, fill in neighbors from back to front
     // 4. resort local neighbors, (this could be done in the prev step)
     std::cout << "neighs ";
@@ -301,26 +301,22 @@ class BuilderBase {
     pvector<Edge> missingInv;
     for(int v = 0; v < offsets.size() - 1; v++){
       int numOutNeighs = offsets[v+1] - offsets[v];
-      std::cout << "outneighs of " << v << ": ";
       for(int i = 0; i < numOutNeighs; i++, n++){
         DestID_* nOfN = neighs[0] + offsets[*n];
-        std::cout << "(" << *n << ")";
-        bool add = true;
+        bool addToMissingInv = true;
         for(int nn = 0; nn < offsets[*n+1] - offsets[*n]; nn++, nOfN++){
           if(*nOfN == v){
-            add = false;
+            addToMissingInv = false;
             break;
           }
         }
-        if(add){
-          std::cout << " <" << *n << ", " << v << ">";
+        if(addToMissingInv){
           Edge e(*n, v);
           missingInv.push_back(e);
         }
-        std::cout << " | ";
       }
-      std::cout << std::endl;
     }
+    // print out missingInv for debugging
     std::cout << "\n\nmissingInv: ";
     for(auto it = missingInv.begin(); it < missingInv.end(); it++){
       Edge e = *it;
