@@ -307,9 +307,10 @@ class BuilderBase {
         std::cout << "(" << *n << ")";
         bool add = true;
         for(int nn = 0; nn < offsets[*n+1] - offsets[*n]; nn++, nOfN++){
-          if(*nOfN == v)
+          if(*nOfN == v){
             add = false;
             break;
+          }
         }
         if(add){
           std::cout << " <" << *n << ", " << v << ">";
