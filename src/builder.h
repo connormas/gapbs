@@ -210,6 +210,11 @@ class BuilderBase {
                       DestID_*** inv_index, DestID_** inv_neighs){
 
     // VARIABLE/OBJECT DECLARATIONS
+    bool placeHolder = false;
+    if(symmetrize_){
+      symmetrize_ = false;
+      placeHolder = true;
+    }
     std::sort(el.begin(), el.end());
     pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
@@ -219,7 +224,14 @@ class BuilderBase {
     *neighs = (DestID_*)el.data();
     int elLength = el.size();
     *inv_neighs = overWriteEL;
-
+    std::cout << "\n\noffsets initially: ";
+    for(int i = 0; i < offsets.size(); i++){
+      std::cout << offsets[i] << " ";
+    }
+    std::cout << "\n\n\n";
+    if(placeHolder){
+      symmetrize_ = true;
+    }
     // OUT GOING NEIGHBORS
     for(int i = 0; i < offsets.size(); i++){
       std::cout << offsets[i] << " ";
@@ -245,6 +257,11 @@ class BuilderBase {
     for(int i = offsets.size(); i >= 0; i--){
         offsets[i] = i != 0 ? offsets[i-1] : 0;
     }
+    std::cout << "\n\noffsets after revert: ";
+    for(int i = 0; i < offsets.size(); i++){
+      std::cout << offsets[i] << " ";
+    }
+    std::cout << "\n\n\n";
 
     // realloc to proper size
     // make sure can handle weighted edges too
@@ -253,22 +270,13 @@ class BuilderBase {
     else
       *neighs = (DestID_*)std::realloc((DestID_*)el.data(), 2 * (elLength * sizeof(DestID_)));
 
-
-    *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
-    for(int i = 0; i < inoffsets.size(); i++){
-      std::cout << inoffsets[i] << " ";
-    }
-    std::cout << "\n";
-    /*if(!symmetrize_){
-      std::cout << "in this if statement\n";
-      *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
-    }
-    std::cout << "GOT HERE";*/
-    // INCOMING NEIGHBORS
+
+    // INCOMING/INVERSE NEIGHBORS
     if (!symmetrize_) {
       // write in-neighs to new malloc'd memory
       *inv_neighs = new DestID_[inoffsets[num_nodes_]];
+      *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
       auto deg = degrees.data();
       DestID_* N = (DestID_*)(neighs[0]);
@@ -278,59 +286,84 @@ class BuilderBase {
           (*inv_neighs)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
         }
       }
-    }
-
-    //FINISH SYMMETRIZE
-    //Scott's proposed algorithm
-    // 1. for all edges, local search to check if inverse needed
-    // 2. make list of needed edge editions (missingInv)
-    // 3. adjust offsets, fill in neighbors from back to front
-    // 4. resort local neighbors, (this could be done in the prev step)
-    std::cout << "neighs ";
-    DestID_* n = neighs[0];
-    for(int i = 0; i < elLength; i++, n++){
-      std::cout << *n << " ";
-    }
-    std::cout << "\noffsets ";
-    for(int i = 0; i < offsets.size(); i++){
-      std::cout << offsets[i] << " ";
-    }
-    std::cout << "\n";
-
-    n = neighs[0];
-    pvector<Edge> missingInv;
-    for(int v = 0; v < offsets.size() - 1; v++){
-      int numOutNeighs = offsets[v+1] - offsets[v];
-      for(int i = 0; i < numOutNeighs; i++, n++){
-        DestID_* nOfN = neighs[0] + offsets[*n];
-        bool addToMissingInv = true;
-        for(int nn = 0; nn < offsets[*n+1] - offsets[*n]; nn++, nOfN++){
-          if(*nOfN == v){
-            addToMissingInv = false;
-            break;
+    } else {
+      //FINISH SYMMETRIZE
+      // Scott's proposed algorithm
+      // 1. for all edges, local search to check if inverse needed
+      // 2. make list of needed edge editions (missingInv)
+      // 3. adjust offsets, fill in neighbors from back to front
+      // 4. resort local neighbors, (this could be done in the prev step)
+      std::cout << "neighs ";
+      DestID_* n = neighs[0];
+      for(int i = 0; i < elLength; i++, n++){
+        std::cout << *n << " ";
+      }
+      std::cout << "\noffsets ";
+      for(int i = 0; i < offsets.size(); i++){
+        std::cout << offsets[i] << " ";
+      }
+      std::cout << "\n";
+      n = neighs[0];
+      pvector<Edge> missingInv;
+      for(int v = 0; v < offsets.size() - 1; v++){
+        int numOutNeighs = offsets[v+1] - offsets[v];
+        for(int i = 0; i < numOutNeighs; i++, n++){
+          DestID_* nOfN = neighs[0] + offsets[*n];
+          bool addToMissingInv = true;
+          for(int nn = 0; nn < offsets[*n+1] - offsets[*n]; nn++, nOfN++){
+            if(*nOfN == v){
+              addToMissingInv = false;
+              break;
+            }
+          }
+          if(addToMissingInv){
+            Edge e(*n, v);
+            missingInv.push_back(e);
           }
         }
-        if(addToMissingInv){
-          Edge e(*n, v);
-          missingInv.push_back(e);
+      }
+      std::sort(missingInv.begin(), missingInv.end());
+      for(Edge e : missingInv){
+        for(int i = e.u + 1; i < offsets.size(); i++){
+          offsets[i] += 1;
         }
       }
-    }
-    for(Edge e : missingInv){
-      for(int i = e.u + 1; i < offsets.size(); i++){
-        offsets[i] += 1;
+      *neighs = (DestID_*)std::realloc(*neighs, offsets[num_nodes_] * sizeof(DestID_));
+      DestID_* N = neighs[0] + offsets[num_nodes_] - 1;
+      n = neighs[0] + offsets[num_nodes_] - missingInv.size() - 1;
+      int mi = missingInv.size() - 1;
+      for(int i = num_nodes_; i > 0; i--){
+        std::cout << "V(" << i-1 << ") ";
+        for(int j = offsets[i]; j > offsets[i-1]; j--, N--){
+          if((i - 1) == missingInv[mi].u){
+            std::cout << missingInv[mi].v << " ";
+            *N = missingInv[mi].v;
+            mi--;
+          } else {
+            std::cout << *n << " ";
+            *N = *n;
+            n--;
+          }
+        }
       }
+      *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
+
+      // printing for debugging
+      std::cout << "\n\nmissingInv: ";
+      for(Edge e : missingInv){
+        std::cout << "<" << e.u << ", " << e.v << "> ";
+      }
+      std::cout << "\n\noffsets after: ";
+      for(int i = 0; i < offsets.size(); i++){
+        std::cout << offsets[i] << " ";
+      }
+      std::cout << "*neighs: ";
+      n = neighs[0];
+      for(int i = 0; i < offsets[num_nodes_]; i++, n++){
+        std::cout << *n << " ";
+      }
+      std::cout << "\n\n";
     }
-    // print out missingInv for debugging
-    std::cout << "\n\nmissingInv: ";
-    for(Edge e : missingInv){
-      std::cout << "<" << e.u << ", " << e.v << "> ";
-    }
-    std::cout << "\n\noffsets after: ";
-    for(int i = 0; i < offsets.size(); i++){
-      std::cout << offsets[i] << " ";
-    }
-    std::cout << "\n\n";
 
     // printing out final result should be outneighs then inneighs
     // will be removed later
@@ -370,10 +403,6 @@ class BuilderBase {
         (*neighs)[fetch_and_add(offsets[static_cast<NodeID_>(e.v)], 1)] =
             GetSource(e);
       }
-    }
-    // print back out the neighbors we just wrote
-    for(int i = 0; i < (int)el.size(); i++){
-      std::cout << "MakeCSR " << i << " " << ((*neighs)[i]) << "\n";
     }
   }
 
