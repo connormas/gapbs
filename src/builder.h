@@ -78,7 +78,7 @@ class BuilderBase {
       Edge e = *it;
       if (symmetrize_ || (!symmetrize_ && !transpose))
         fetch_and_add(degrees[e.u], 1);
-      if (symmetrize_ || (!symmetrize_ && transpose))
+      if ((!inPlace_) && (symmetrize_ || (!symmetrize_ && transpose)))
         fetch_and_add(degrees[(NodeID_) e.v], 1);
     }
     return degrees;
@@ -210,11 +210,6 @@ class BuilderBase {
                       DestID_*** inv_index, DestID_** inv_neighs){
 
     // VARIABLE/OBJECT DECLARATIONS
-    bool placeHolder = false;
-    if(symmetrize_){
-      symmetrize_ = false;
-      placeHolder = true;
-    }
     std::sort(el.begin(), el.end());
     pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
@@ -229,9 +224,6 @@ class BuilderBase {
       std::cout << offsets[i] << " ";
     }
     std::cout << "\n\n\n";
-    if(placeHolder){
-      symmetrize_ = true;
-    }
     // OUT GOING NEIGHBORS
     for(int i = 0; i < offsets.size(); i++){
       std::cout << offsets[i] << " ";
