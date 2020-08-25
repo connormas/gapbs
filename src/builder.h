@@ -214,28 +214,11 @@ class BuilderBase {
     pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     pvector<NodeID_> indegrees = CountDegrees(el, true);
-    //pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
     DestID_* overWriteEL = (DestID_*)el.data();
     *neighs = (DestID_*)el.data();
     int elLength = el.size();
     *inv_neighs = overWriteEL;
-    std::cout << "\n\noffsets initially: ";
-    for(int i = 0; i < offsets.size(); i++){
-      std::cout << offsets[i] << " ";
-    }
-    std::cout << "\n\n\n";
     // OUT GOING NEIGHBORS
-    for(int i = 0; i < offsets.size(); i++){
-      std::cout << offsets[i] << " ";
-    }
-    std::cout << std::endl;
-    for(auto it = el.begin(); it < el.end(); it++){
-      Edge e = *it;
-      std::cout << "(" << e.u << ", " << e.v << ") ";
-    }
-    std::cout << std::endl;
-
-    //overwrite EdgeList memory
     for(auto it = el.begin(); it < el.end(); it++){  //(Edge e : el){
       Edge e = *it;
       auto ev = e.v;
@@ -249,11 +232,6 @@ class BuilderBase {
     for(int i = offsets.size(); i >= 0; i--){
         offsets[i] = i != 0 ? offsets[i-1] : 0;
     }
-    std::cout << "\n\noffsets after revert: ";
-    for(int i = 0; i < offsets.size(); i++){
-      std::cout << offsets[i] << " ";
-    }
-    std::cout << "\n\n\n";
 
     // realloc to proper size
     // make sure can handle weighted edges too
@@ -264,7 +242,7 @@ class BuilderBase {
 
     pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
 
-    // INCOMING/INVERSE NEIGHBORS
+    // IF: INCOMING ELSE: INVERSE
     if (!symmetrize_) {
       // write in-neighs to new malloc'd memory
       *inv_neighs = new DestID_[inoffsets[num_nodes_]];
@@ -279,22 +257,13 @@ class BuilderBase {
         }
       }
     } else {
-      //FINISH SYMMETRIZE
+      // FINISH SYMMETRIZE
       // Scott's proposed algorithm
       // 1. for all edges, local search to check if inverse needed
       // 2. make list of needed edge editions (missingInv)
       // 3. adjust offsets, fill in neighbors from back to front
       // 4. resort local neighbors, (this could be done in the prev step)
-      std::cout << "neighs ";
       DestID_* n = neighs[0];
-      for(int i = 0; i < elLength; i++, n++){
-        std::cout << *n << " ";
-      }
-      std::cout << "\noffsets ";
-      for(int i = 0; i < offsets.size(); i++){
-        std::cout << offsets[i] << " ";
-      }
-      std::cout << "\n";
       n = neighs[0];
       pvector<Edge> missingInv;
       for(int v = 0; v < offsets.size() - 1; v++){
@@ -314,6 +283,7 @@ class BuilderBase {
           }
         }
       }
+      //increment degrees, then make new offsets from that
       std::sort(missingInv.begin(), missingInv.end());
       for(Edge e : missingInv){
         for(int i = e.u + 1; i < offsets.size(); i++){
@@ -325,50 +295,18 @@ class BuilderBase {
       n = neighs[0] + offsets[num_nodes_] - missingInv.size() - 1;
       int mi = missingInv.size() - 1;
       for(int i = num_nodes_; i > 0; i--){
-        std::cout << "V(" << i-1 << ") ";
         for(int j = offsets[i]; j > offsets[i-1]; j--, N--){
           if((i - 1) == missingInv[mi].u){
-            std::cout << missingInv[mi].v << " ";
             *N = missingInv[mi].v;
             mi--;
           } else {
-            std::cout << *n << " ";
             *N = *n;
             n--;
           }
         }
       }
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
-
-      // printing for debugging
-      std::cout << "\n\nmissingInv: ";
-      for(Edge e : missingInv){
-        std::cout << "<" << e.u << ", " << e.v << "> ";
-      }
-      std::cout << "\n\noffsets after: ";
-      for(int i = 0; i < offsets.size(); i++){
-        std::cout << offsets[i] << " ";
-      }
-      std::cout << "*neighs: ";
-      n = neighs[0];
-      for(int i = 0; i < offsets[num_nodes_]; i++, n++){
-        std::cout << *n << " ";
-      }
-      std::cout << "\n\n";
     }
-
-    // printing out final result should be outneighs then inneighs
-    // will be removed later
-    /*DestID_* n = (DestID_*)el.data();
-    for(int i = 0; i < (int)elLength; i++, n++) {
-      std::cout << "MakeCSRInPlace " << i << ": " << *n << "\n";
-    }
-    if(!symmetrize_){
-      n = inv_neighs[0];
-      for(int i = 0; i < (int)elLength; i++, n++) {
-        std::cout << "MakeCSRInPlace " << i << ": " << *n << "\n";
-      }
-    }*/
   }
 
   /*
@@ -418,10 +356,8 @@ class BuilderBase {
     t.Stop();
     PrintTime("Build Time", t.Seconds());
     if (symmetrize_){
-      std::cout << "returning graph w/ out inv index/neighs\n";
       return CSRGraph<NodeID_, DestID_, invert>(num_nodes_, index, neighs);
     } else {
-      std::cout << "returning graph with inv index/neighs\n";
       return CSRGraph<NodeID_, DestID_, invert>(num_nodes_, index, neighs,
                                                 inv_index, inv_neighs);
     }
@@ -443,12 +379,8 @@ class BuilderBase {
         Generator<NodeID_, DestID_> gen(cli_.scale(), cli_.degree());
         el = gen.GenerateEL(cli_.uniform());
       }
-      std::cout << "calling MakeGraphFromEL\n";
       g = MakeGraphFromEL(el);
-      std::cout << "done w/ MakeGraphFromEL and ABOUT TO FREE EL MEMORY\n";
     }
-    //can be taken out later, or modify squishgraph()
-    std::cout << "calling squishgraph\n";
     return SquishGraph(g);
   }
 

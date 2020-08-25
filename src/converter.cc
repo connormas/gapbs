@@ -23,13 +23,10 @@ int main(int argc, char* argv[]) {
     ww.WriteGraph(cli.out_filename(), cli.out_sg());
   } else {
     Builder b(cli);
-    std::cout << "calling makegraph\n";
     Graph g = b.MakeGraph(cli.lowmem());
-    std::cout << "done w squishgraph and GRAPH IS MADE\n";
     g.PrintStats();
     Writer w(g);
     w.WriteGraph(cli.out_filename(), cli.out_sg());
-    std::cout << "DONE WITH CONVERTER\n";
   }
   return 0;
 }
