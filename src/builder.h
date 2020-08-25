@@ -214,10 +214,9 @@ class BuilderBase {
     pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     pvector<NodeID_> indegrees = CountDegrees(el, true);
-    DestID_* overWriteEL = (DestID_*)el.data();
     *neighs = (DestID_*)el.data();
     int elLength = el.size();
-    *inv_neighs = overWriteEL;
+    *inv_neighs = (DestID_*)el.data();
 
     // OUT GOING NEIGHBORS
     for(auto it = el.begin(); it < el.end(); it++){  //(Edge e : el){
@@ -293,17 +292,17 @@ class BuilderBase {
       offsets = ParallelPrefixSum(degrees);
       //fill in neighs from the back
       *neighs = (DestID_*)std::realloc(*neighs, offsets[num_nodes_] * sizeof(DestID_));
-      DestID_* N = neighs[0] + offsets[num_nodes_] - 1;
-      n = neighs[0] + offsets[num_nodes_] - missingInv.size() - 1;
+      int N = offsets[num_nodes_] - 1;
+      int k = offsets[num_nodes_] - missingInv.size() - 1;
       int mi = missingInv.size() - 1;
       for(int i = num_nodes_; i > 0; i--){
-        for(int j = offsets[i]; j > offsets[i-1]; j--, N--){
+        for(; N+1 > offsets[i-1]; N--){
           if((i - 1) == missingInv[mi].u){
-            *N = missingInv[mi].v;
+            (*neighs)[N] = missingInv[mi].v;
             mi--;
           } else {
-            *N = *n;
-            n--;
+            (*neighs)[N] = (*neighs)[k];
+            k--;
           }
         }
       }
