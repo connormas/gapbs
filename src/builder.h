@@ -218,6 +218,7 @@ class BuilderBase {
     *neighs = (DestID_*)el.data();
     int elLength = el.size();
     *inv_neighs = overWriteEL;
+
     // OUT GOING NEIGHBORS
     for(auto it = el.begin(); it < el.end(); it++){  //(Edge e : el){
       Edge e = *it;
@@ -228,7 +229,6 @@ class BuilderBase {
     }
 
     //revert offsets
-    std::cout << std::endl;
     for(int i = offsets.size(); i >= 0; i--){
         offsets[i] = i != 0 ? offsets[i-1] : 0;
     }
@@ -242,7 +242,8 @@ class BuilderBase {
 
     pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
 
-    // IF: INCOMING ELSE: INVERSE
+    // IF: INCOMING
+    // ELSE: INVERSE
     if (!symmetrize_) {
       // write in-neighs to new malloc'd memory
       *inv_neighs = new DestID_[inoffsets[num_nodes_]];
@@ -266,6 +267,7 @@ class BuilderBase {
       DestID_* n = neighs[0];
       n = neighs[0];
       pvector<Edge> missingInv;
+      //identify needed inverses
       for(int v = 0; v < offsets.size() - 1; v++){
         int numOutNeighs = offsets[v+1] - offsets[v];
         for(int i = 0; i < numOutNeighs; i++, n++){
@@ -277,6 +279,7 @@ class BuilderBase {
               break;
             }
           }
+          //add to list of missing inverses
           if(addToMissingInv){
             Edge e(*n, v);
             missingInv.push_back(e);
@@ -290,6 +293,7 @@ class BuilderBase {
           offsets[i] += 1;
         }
       }
+      //fill in neighs from the back
       *neighs = (DestID_*)std::realloc(*neighs, offsets[num_nodes_] * sizeof(DestID_));
       DestID_* N = neighs[0] + offsets[num_nodes_] - 1;
       n = neighs[0] + offsets[num_nodes_] - missingInv.size() - 1;
