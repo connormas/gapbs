@@ -287,12 +287,25 @@ class BuilderBase {
         }
       }
       //increment degrees, then make new offsets from that
+      std::cout << "\n\noffsets before: ";
+      for(int i : offsets)
+        std::cout << i << " ";
+      std::cout << "\n\n";
       std::sort(missingInv.begin(), missingInv.end());
-      for(Edge e : missingInv){
+      /*for(Edge e : missingInv){
         for(int i = e.u + 1; i < offsets.size(); i++){
           offsets[i] += 1;
         }
+      }*/
+      for(Edge e : missingInv){
+        degrees[e.u] += 1;
       }
+      offsets = ParallelPrefixSum(degrees);
+      std::cout << "\n\noffsets after: ";
+      for(int i : offsets)
+        std::cout << i << " ";
+      std::cout << "\n\n";
+
       //fill in neighs from the back
       *neighs = (DestID_*)std::realloc(*neighs, offsets[num_nodes_] * sizeof(DestID_));
       DestID_* N = neighs[0] + offsets[num_nodes_] - 1;
