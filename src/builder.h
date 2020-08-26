@@ -232,19 +232,12 @@ class BuilderBase {
         offsets[i] = i != 0 ? offsets[i-1] : 0;
     }
 
-    // realloc to proper size
-    // make sure can handle weighted edges too
-    if(!symmetrize_)
-      *neighs = (DestID_*)std::realloc((DestID_*)el.data(), (elLength * sizeof(DestID_)));
-    else
-      *neighs = (DestID_*)std::realloc((DestID_*)el.data(), 2 * (elLength * sizeof(DestID_)));
-
-    pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
-
     // IF: INCOMING
     // ELSE: INVERSE
     if (!symmetrize_) {
       // write in-neighs to new malloc'd memory
+      *neighs = (DestID_*)std::realloc((DestID_*)el.data(), (elLength * sizeof(DestID_)));
+      pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
       *inv_neighs = new DestID_[inoffsets[num_nodes_]];
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
