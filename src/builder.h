@@ -257,12 +257,6 @@ class BuilderBase {
         }
       }
     } else {
-      // FINISH SYMMETRIZE
-      // Scott's proposed algorithm
-      // 1. for all edges, local search to check if inverse needed
-      // 2. make list of needed edge editions (missingInv)
-      // 3. adjust offsets, fill in neighbors from back to front
-      // 4. resort local neighbors, (this could be done in the prev step)
       DestID_* n = neighs[0];
       n = neighs[0];
       pvector<Edge> missingInv;
@@ -270,16 +264,7 @@ class BuilderBase {
       for(int v = 0; v < offsets.size() - 1; v++){
         int numOutNeighs = offsets[v+1] - offsets[v];
         for(int i = 0; i < numOutNeighs; i++, n++){
-          DestID_* nOfN = neighs[0] + offsets[*n];
-          bool addToMissingInv = true;
-          for(int nn = 0; nn < offsets[*n+1] - offsets[*n]; nn++, nOfN++){
-            if(*nOfN == v){
-              addToMissingInv = false;
-              break;
-            }
-          }
-          //add to list of missing inverses
-          if(addToMissingInv){
+          if(!(std::binary_search(&(*neighs)[offsets[*n]], &(*neighs)[offsets[*n+1]], (DestID_)v))){
             Edge e(*n, v);
             missingInv.push_back(e);
           }
