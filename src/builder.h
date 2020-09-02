@@ -254,7 +254,7 @@ class BuilderBase {
       n = neighs[0];
       pvector<Edge> missingInv;
       //identify needed inverses
-      for(int v = 0; v < offsets.size() - 1; v++){
+      for(int v = 0; v < (int)offsets.size() - 1; v++){
         int numOutNeighs = offsets[v+1] - offsets[v];
         for(int i = 0; i < numOutNeighs; i++, n++){
           if(!(std::binary_search(&(*neighs)[offsets[*n]], &(*neighs)[offsets[*n+1]], (DestID_)v))){
@@ -273,9 +273,9 @@ class BuilderBase {
       int N = offsets[num_nodes_] - 1;
       int k = offsets[num_nodes_] - missingInv.size() - 1;
       int mi = missingInv.size() - 1;
-      for(int i = num_nodes_; i > 0; i--){
-        for(; N+1 > offsets[i-1]; N--){
-          if((i - 1) == missingInv[mi].u){
+      for (int i = num_nodes_; i > 0; i--) {
+        for (; N+1 > offsets[i-1]; N--) {
+          if ((i - 1) == missingInv[mi].u) { //&& missingInv[mi].v > (*neighs)[k]) {
             (*neighs)[N] = missingInv[mi].v;
             mi--;
           } else {
@@ -283,7 +283,20 @@ class BuilderBase {
             k--;
           }
         }
+        // printing for debugging  
+        /*std::cout << "\ncalling sort from " << *(&(*neighs)[k]) << " and degrees[i] = " 
+                  << degrees[i-1] << std::endl;
+        for (int k = 0; k < degrees[i-1]; k++) {
+          std::cout << *(&(*neighs)[N] + k + 1) << " ";
+        }
+        std::cout << std::endl;*/
+        if (degrees[i-1] != 0) 
+          std::sort((&(neighs)[N] + 1), (&(neighs)[N] + degrees[i-1]));
       }
+      n = neighs[0];
+      for (int i = 0; i < offsets[num_nodes_]; i++, n++) {
+        std::cout << *n << " ";
+      }std::cout << std::endl;
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     }
   }
