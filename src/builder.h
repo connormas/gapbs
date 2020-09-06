@@ -211,6 +211,10 @@ class BuilderBase {
 
     // VARIABLE/OBJECT DECLARATIONS
     std::sort(el.begin(), el.end());
+
+    //SQUISH IN PLACE
+
+
     pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     pvector<NodeID_> indegrees = CountDegrees(el, true);
@@ -219,6 +223,7 @@ class BuilderBase {
     *inv_neighs = (DestID_*)el.data();
 
     // OUT GOING NEIGHBORS
+    #pragma omp parallel for
     for(auto it = el.begin(); it < el.end(); it++){  //(Edge e : el){
       Edge e = *it;
       auto ev = e.v;
@@ -241,12 +246,13 @@ class BuilderBase {
       *inv_neighs = new DestID_[inoffsets[num_nodes_]];
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
-      auto deg = degrees.data();
-      DestID_* N = (DestID_*)(neighs[0]);
-      int neighbor = 0;
-      for(int i = 0; i < (int)degrees.size(); i++, deg++, neighbor++){
-        for(int j = 0; j < (int)(*deg); j++, N++){
-          (*inv_neighs)[fetch_and_add(inoffsets[*N], 1)] = neighbor;
+      //auto deg = degrees.data();
+      //DestID_* N = (DestID_*)(neighs[0]);
+      //int neighbor = 0;
+      for (int i = 0; i < (int)degrees.size(); i++) {
+        for (int j = 0; j < (int)degrees[i]; j++) {
+          NodeID_ u = (int64_t)(index[i] + j);
+          (*inv_neighs)[fetch_and_add(inoffsets[u], 1)] = i;
         }
       }
     } else {
@@ -254,10 +260,10 @@ class BuilderBase {
       n = neighs[0];
       pvector<Edge> missingInv;
       //identify needed inverses
-      for(int v = 0; v < offsets.size() - 1; v++){
+      for (int v = 0; v < offsets.size() - 1; v++) {
         int numOutNeighs = offsets[v+1] - offsets[v];
-        for(int i = 0; i < numOutNeighs; i++, n++){
-          if(!(std::binary_search(&(*neighs)[offsets[*n]], &(*neighs)[offsets[*n+1]], (DestID_)v))){
+        for (int i = 0; i < numOutNeighs; i++, n++) {
+          if (!(std::binary_search(&(*neighs)[offsets[*n]], &(*neighs)[offsets[*n+1]], (DestID_)v))) {
             Edge e(*n, v);
             missingInv.push_back(e);
           }
@@ -265,8 +271,10 @@ class BuilderBase {
       }
       //increment degrees, then make new offsets from that
       std::sort(missingInv.begin(), missingInv.end());
-      for(Edge e : missingInv)
+      for(Edge e : missingInv) {
         degrees[e.u] += 1;
+        std::cout << e.u << " " << e.v << "\n";
+      }
       offsets = ParallelPrefixSum(degrees);
       //fill in neighs from the back
       *neighs = (DestID_*)std::realloc(*neighs, offsets[num_nodes_] * sizeof(DestID_));
@@ -283,7 +291,22 @@ class BuilderBase {
             k--;
           }
         }
+        if (degrees[i-1] != 0) {
+          std::sort((&(*neighs)[N] + 1), (&(*neighs)[N] + degrees[i-1] + 1));
+        }
       }
+      n = neighs[0];
+      std::cout << "OFFSETS: ";
+      for (int i : offsets)
+        std::cout << i << " ";
+      std::cout << std::endl;
+      std::cout << "DEGREES: ";
+      for (int i : degrees)
+        std::cout << i << " ";
+      std::cout << std::endl;
+      for (int i =0; i < offsets[num_nodes_]; i++, n++) {
+        std::cout << *n << " ";
+      }std::cout << std::endl;
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     }
   }
@@ -360,7 +383,12 @@ class BuilderBase {
       }
       g = MakeGraphFromEL(el);
     }
-    return SquishGraph(g);
+    if (inPlace_) {
+      std::cout << "no squishgraph(g)\n";
+      return g;
+    } else {
+      return SquishGraph(g);
+    }
   }
 
   // Relabels (and rebuilds) graph by order of decreasing degree
