@@ -86,6 +86,10 @@ struct EdgePair {
       return u < rhs.u;
     }
   }
+  
+  bool operator== (const EdgePair& rhs) const {
+    return ((u == rhs.u) && (v == rhs.v));
+  } 
 };
 
 // SG = serialized graph, these types are for writing graph to file
