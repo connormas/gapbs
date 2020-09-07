@@ -223,7 +223,7 @@ class BuilderBase {
     *inv_neighs = (DestID_*)el.data();
 
     // OUT GOING NEIGHBORS
-    #pragma omp parallel for
+    // #pragma omp parallel for
     for(auto it = el.begin(); it < el.end(); it++){  //(Edge e : el){
       Edge e = *it;
       auto ev = e.v;
@@ -260,7 +260,7 @@ class BuilderBase {
       n = neighs[0];
       pvector<Edge> missingInv;
       //identify needed inverses
-      for (int v = 0; v < offsets.size() - 1; v++) {
+      for (int v = 0; v < (int)offsets.size() - 1; v++) {
         int numOutNeighs = offsets[v+1] - offsets[v];
         for (int i = 0; i < numOutNeighs; i++, n++) {
           if (!(std::binary_search(&(*neighs)[offsets[*n]], &(*neighs)[offsets[*n+1]], (DestID_)v))) {
