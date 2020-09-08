@@ -206,13 +206,40 @@ class BuilderBase {
   usage low. We do this by repurposing the EdgeList pvector and
   using it as the new neighbors array.
   */
-  void MakeCSRInPlace(const EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs,
+  void MakeCSRInPlace(EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs,
                       DestID_*** inv_index, DestID_** inv_neighs){
 
     // VARIABLE/OBJECT DECLARATIONS
     std::sort(el.begin(), el.end());
 
+    // INITIAL PRINTING OF EDGELIST AND OTHER STUFF FOR DEBUGGING 
+    std::cout << "Edgelist initially:\n";
+    for (Edge e : el) {
+      std::cout << "(" << (e).u << ", " << (e).v << ") ";
+    } 
+    std::cout << std::endl;
+
     //SQUISH IN PLACE
+    //remove duplicate edges
+    Edge* e = (Edge*)&(el[0]);
+    auto new_end = std::unique(el.begin(), el.end());
+    el.resize(new_end - el.begin());
+    
+    std::cout << "EdgeList after call to std::unique\n";
+    for (auto it = el.begin(); it < new_end; it++) {
+      std::cout << "(" << it->u << ", " << it->v << ") ";
+    } 
+    std::cout << std::endl;
+    
+    //remove self loops 
+    new_end = std::remove_if(el.begin(), el.end(), [](Edge e){return e.u == e.v;});
+    el.resize(new_end - el.begin());
+
+    std::cout << "EdgeList after call to std::remove_if\n";
+    for (auto it = el.begin(); it < new_end; it++) {
+      std::cout << "(" << it->u << ", " << it->v << ") ";
+    } 
+    std::cout << std::endl;
 
 
     pvector<NodeID_> degrees = CountDegrees(el, false);
@@ -271,10 +298,13 @@ class BuilderBase {
       }
       //increment degrees, then make new offsets from that
       std::sort(missingInv.begin(), missingInv.end());
+      std::cout << "missing inverses: ";
       for(Edge e : missingInv) {
         degrees[e.u] += 1;
-        std::cout << e.u << " " << e.v << "\n";
+        std::cout << "(" << e.u << ", " << e.v << ") ";
       }
+      std::cout << std::endl;
+
       offsets = ParallelPrefixSum(degrees);
       //fill in neighs from the back
       *neighs = (DestID_*)std::realloc(*neighs, offsets[num_nodes_] * sizeof(DestID_));
