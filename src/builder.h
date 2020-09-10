@@ -73,13 +73,15 @@ class BuilderBase {
 
   pvector<NodeID_> CountDegrees(const EdgeList &el, bool transpose) {
     pvector<NodeID_> degrees(num_nodes_, 0);
-    #pragma omp parallel for
+    // #pragma omp parallel for
     for (auto it = el.begin(); it < el.end(); it++) {
       Edge e = *it;
-      if (symmetrize_ || (!symmetrize_ && !transpose))
+      if (symmetrize_ || (!symmetrize_ && !transpose)) {
         fetch_and_add(degrees[e.u], 1);
-      if ((!inPlace_) && (symmetrize_ || (!symmetrize_ && transpose)))
+      }
+      if (!(inPlace_ && symmetrize_) && (symmetrize_ || (!symmetrize_ && transpose))) {
         fetch_and_add(degrees[(NodeID_) e.v], 1);
+      }
     }
     return degrees;
   }
@@ -221,25 +223,26 @@ class BuilderBase {
 
     //SQUISH IN PLACE
     //remove duplicate edges
-    Edge* e = (Edge*)&(el[0]);
     auto new_end = std::unique(el.begin(), el.end());
-    el.resize(new_end - el.begin());
+    if (new_end != el.end())
+      el.resize(new_end - el.begin());
     
-    std::cout << "EdgeList after call to std::unique\n";
+    /*std::cout << "EdgeList after call to std::unique\n";
     for (auto it = el.begin(); it < new_end; it++) {
       std::cout << "(" << it->u << ", " << it->v << ") ";
     } 
-    std::cout << std::endl;
+    std::cout << std::endl;*/
     
     //remove self loops 
     new_end = std::remove_if(el.begin(), el.end(), [](Edge e){return e.u == e.v;});
-    el.resize(new_end - el.begin());
+    if (new_end != el.end())
+      el.resize(new_end - el.begin());
 
-    std::cout << "EdgeList after call to std::remove_if\n";
+    /*std::cout << "EdgeList after call to std::remove_if\n";
     for (auto it = el.begin(); it < new_end; it++) {
       std::cout << "(" << it->u << ", " << it->v << ") ";
     } 
-    std::cout << std::endl;
+    std::cout << std::endl;*/
 
 
     pvector<NodeID_> degrees = CountDegrees(el, false);
@@ -273,13 +276,52 @@ class BuilderBase {
       *inv_neighs = new DestID_[inoffsets[num_nodes_]];
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
+      
+      /*
+      //printing for debuggingi ------------------------------------------------------------------
+      std::cout << "degrees:\n";
+      for (int d : degrees) {
+        std::cout << d << " ";
+      }
+      std::cout << std::endl;
+      std::cout << "offsets:\n";
+      for (int d : offsets) {
+        std::cout << d << " ";
+      }
+      std::cout << std::endl;
+      std::cout << "indegrees:\n";
+      for (int d : indegrees) {
+        std::cout << d << " ";
+      }
+      std::cout << std::endl;
+      std::cout << "inoffsets:\n";
+      for (int d : inoffsets) {
+        std::cout << d << " ";
+      }
+      std::cout << std::endl;
+      std::cout << "index:\n";
+      for (int i = 0; i < num_nodes_; i++) {
+        std::cout << index[i] << " ";
+      }
+      std::cout << "\n\n";
+
+      std::cout << "printing index addresses:\n";
+      for (int i = 0; i < num_nodes_; i++) {
+        for (int offset = 0; offset < degrees[i]; offset++) {
+          std::cout << index[i] + offset << " " << *(index[i] + offset) <<  "\n";
+        }
+      }
+      std::cout << std::endl;
+      // -----------------------------------------------------------------------------------------
+      */
+
       //auto deg = degrees.data();
-      //DestID_* N = (DestID_*)(neighs[0]);
+      DestID_* N = (DestID_*)(neighs[0]);
       //int neighbor = 0;
       for (int i = 0; i < (int)degrees.size(); i++) {
-        for (int j = 0; j < (int)degrees[i]; j++) {
-          NodeID_ u = (int64_t)(index[i] + j);
-          (*inv_neighs)[fetch_and_add(inoffsets[u], 1)] = i;
+        for (int j = 0; j < (int)degrees[i]; j++,  N++) {
+          //auto u = ((index[i] + j));
+          (*inv_neighs)[fetch_and_add(inoffsets[*N], 1)] = i;
         }
       }
     } else {
@@ -325,18 +367,6 @@ class BuilderBase {
           std::sort((&(*neighs)[N] + 1), (&(*neighs)[N] + degrees[i-1] + 1));
         }
       }
-      n = neighs[0];
-      std::cout << "OFFSETS: ";
-      for (int i : offsets)
-        std::cout << i << " ";
-      std::cout << std::endl;
-      std::cout << "DEGREES: ";
-      for (int i : degrees)
-        std::cout << i << " ";
-      std::cout << std::endl;
-      for (int i =0; i < offsets[num_nodes_]; i++, n++) {
-        std::cout << *n << " ";
-      }std::cout << std::endl;
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     }
   }
