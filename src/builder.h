@@ -211,40 +211,27 @@ class BuilderBase {
   void MakeCSRInPlace(EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs,
                       DestID_*** inv_index, DestID_** inv_neighs){
 
-    // VARIABLE/OBJECT DECLARATIONS
     std::sort(el.begin(), el.end());
 
     // INITIAL PRINTING OF EDGELIST AND OTHER STUFF FOR DEBUGGING 
-    std::cout << "Edgelist initially:\n";
+    /*std::cout << "Edgelist initially:\n";
     for (Edge e : el) {
       std::cout << "(" << (e).u << ", " << (e).v << ") ";
     } 
-    std::cout << std::endl;
+    std::cout << std::endl;*/
 
-    //SQUISH IN PLACE
-    //remove duplicate edges
+    // SQUISH IN PLACE
+    //  remove duplicate edges
     auto new_end = std::unique(el.begin(), el.end());
     if (new_end != el.end())
       el.resize(new_end - el.begin());
     
-    /*std::cout << "EdgeList after call to std::unique\n";
-    for (auto it = el.begin(); it < new_end; it++) {
-      std::cout << "(" << it->u << ", " << it->v << ") ";
-    } 
-    std::cout << std::endl;*/
-    
-    //remove self loops 
+    //  remove self loops 
     new_end = std::remove_if(el.begin(), el.end(), [](Edge e){return e.u == e.v;});
     if (new_end != el.end())
       el.resize(new_end - el.begin());
 
-    /*std::cout << "EdgeList after call to std::remove_if\n";
-    for (auto it = el.begin(); it < new_end; it++) {
-      std::cout << "(" << it->u << ", " << it->v << ") ";
-    } 
-    std::cout << std::endl;*/
-
-
+    // VARIABLE & OBJECT DECLARATIONS
     pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     pvector<NodeID_> indegrees = CountDegrees(el, true);
@@ -253,7 +240,7 @@ class BuilderBase {
     *inv_neighs = (DestID_*)el.data();
 
     // OUT GOING NEIGHBORS
-    // #pragma omp parallel for
+    // #pragma omp parallel for <- NOTE: may require another sort
     for(auto it = el.begin(); it < el.end(); it++){  //(Edge e : el){
       Edge e = *it;
       auto ev = e.v;
@@ -277,45 +264,6 @@ class BuilderBase {
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
       
-      /*
-      //printing for debuggingi ------------------------------------------------------------------
-      std::cout << "degrees:\n";
-      for (int d : degrees) {
-        std::cout << d << " ";
-      }
-      std::cout << std::endl;
-      std::cout << "offsets:\n";
-      for (int d : offsets) {
-        std::cout << d << " ";
-      }
-      std::cout << std::endl;
-      std::cout << "indegrees:\n";
-      for (int d : indegrees) {
-        std::cout << d << " ";
-      }
-      std::cout << std::endl;
-      std::cout << "inoffsets:\n";
-      for (int d : inoffsets) {
-        std::cout << d << " ";
-      }
-      std::cout << std::endl;
-      std::cout << "index:\n";
-      for (int i = 0; i < num_nodes_; i++) {
-        std::cout << index[i] << " ";
-      }
-      std::cout << "\n\n";
-
-      std::cout << "printing index addresses:\n";
-      for (int i = 0; i < num_nodes_; i++) {
-        for (int offset = 0; offset < degrees[i]; offset++) {
-          std::cout << index[i] + offset << " " << *(index[i] + offset) <<  "\n";
-        }
-      }
-      std::cout << std::endl;
-      // -----------------------------------------------------------------------------------------
-      */
-
-      //auto deg = degrees.data();
       DestID_* N = (DestID_*)(neighs[0]);
       //int neighbor = 0;
       for (int i = 0; i < (int)degrees.size(); i++) {
@@ -328,7 +276,7 @@ class BuilderBase {
       DestID_* n = neighs[0];
       n = neighs[0];
       pvector<Edge> missingInv;
-      //identify needed inverses
+      //  identify needed inverses
       for (int v = 0; v < (int)offsets.size() - 1; v++) {
         int numOutNeighs = offsets[v+1] - offsets[v];
         for (int i = 0; i < numOutNeighs; i++, n++) {
@@ -338,17 +286,18 @@ class BuilderBase {
           }
         }
       }
-      //increment degrees, then make new offsets from that
+
+      //  increment degrees, then make new offsets from that
       std::sort(missingInv.begin(), missingInv.end());
-      std::cout << "missing inverses: ";
+      //std::cout << "missing inverses: ";
       for(Edge e : missingInv) {
         degrees[e.u] += 1;
-        std::cout << "(" << e.u << ", " << e.v << ") ";
+        //std::cout << "(" << e.u << ", " << e.v << ") ";
       }
-      std::cout << std::endl;
-
+      //std::cout << std::endl;
       offsets = ParallelPrefixSum(degrees);
-      //fill in neighs from the back
+
+      //  fill in neighs from the back, sort in place
       *neighs = (DestID_*)std::realloc(*neighs, offsets[num_nodes_] * sizeof(DestID_));
       int N = offsets[num_nodes_] - 1;
       int k = offsets[num_nodes_] - missingInv.size() - 1;
