@@ -1,0 +1,42 @@
+1. ./converter -f testgraph.el -m -e tg-m-e.el
+
+#0  __GI___libc_fn __GI___libc_free (mem=<optimized out>) at malloc.c:3124
+#1  0x000055555555b282 in __gnu_cxx::new_allocator<char>::deallocate (this=0x5555555835c0, __p=<optimized out>) at /usr/include/c++/9/ext/new_allocator.h:119
+#2  std::allocator_traits<std::allocator<char> >::deallocate (__a=..., __n=<optimized out>, __p=<optimized out>) at /usr/include/c++/9/bits/alloc_traits.h:470
+#3  std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_destroy (__size=<optimized out>, this=0x5555555835c0) at /usr/include/c++/9/bits/basic_string.h:237
+#4  std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose (this=0x5555555835c0) at /usr/include/c++/9/bits/basic_string.h:232
+#5  std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::~basic_string (this=0x5555555835c0, __in_chrg=<optimized out>) at /usr/include/c++/9/bits/basic_string.h:658
+#6  std::_Destroy<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > (__pointer=0x5555555835c0) at /usr/include/c++/9/bits/stl_construct.h:98
+#7  std::_Destroy_aux<false>::__destroy<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*> (__last=<optimized out>, __first=0x5555555835c0) at /usr/include/c++/9/bits/stl_construct.h:108
+#8  std::_Destroy<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*> (__last=<optimized out>, __first=<optimized out>) at /usr/include/c++/9/bits/stl_construct.h:137
+#9  std::_Destroy<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > (__last=0x5555555835e0, __first=<optimized out>)
+    at /usr/include/c++/9/bits/stl_construct.h:206
+#10 std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::~vector (this=0x7fffffffe2f8,
+        __in_chrg=<optimized out>) at /usr/include/c++/9/bits/stl_vector.h:677
+#11 CLBase::~CLBase (this=0x7fffffffe2a0, __in_chrg=<optimized out>) at src/command_line.h:28
+#12 CLConvert::~CLConvert (this=0x7fffffffe2a0, __in_chrg=<optimized out>) at src/command_line.h:223
+#13 0x0000555555557e25 in main (argc=<optimized out>, argv=<optimized out>) at src/converter.cc:31
+
+
+2. ./converter -f testgraph3.el -m -e tg3-m-e.el
+
+#0  __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:50
+#1  0x00007ffff7bab859 in __GI_abort () at abort.c:79
+#2  0x00007ffff7c163ee in __libc_message (action=action@entry=do_abort, fmt=fmt@entry=0x7ffff7d40285 "%s\n") at ../sysdeps/posix/libc_fatal.c:155
+#3  0x00007ffff7c1e47c in malloc_printerr (str=str@entry=0x7ffff7d421e0 "munmap_chunk(): invalid pointer") at malloc.c:5347
+#4  0x00007ffff7c1e6cc in munmap_chunk (p=<optimized out>) at malloc.c:2830
+#5  0x000055555555b282 in __gnu_cxx::new_allocator<char>::deallocate (this=0x5555555835c0, __p=<optimized out>) at /usr/include/c++/9/ext/new_allocator.h:119
+#6  std::allocator_traits<std::allocator<char> >::deallocate (__a=..., __n=<optimized out>, __p=<optimized out>) at /usr/include/c++/9/bits/alloc_traits.h:470
+#7  std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_destroy (__size=<optimized out>, this=0x5555555835c0) at /usr/include/c++/9/bits/basic_string.h:237
+#8  std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose (this=0x5555555835c0) at /usr/include/c++/9/bits/basic_string.h:232
+#9  std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::~basic_string (this=0x5555555835c0, __in_chrg=<optimized out>) at /usr/include/c++/9/bits/basic_string.h:658
+#10 std::_Destroy<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > (__pointer=0x5555555835c0) at /usr/include/c++/9/bits/stl_construct.h:98
+#11 std::_Destroy_aux<false>::__destroy<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*> (__last=<optimized out>, __first=0x5555555835c0) at /usr/include/c++/9/bits/stl_construct.h:108
+#12 std::_Destroy<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*> (__last=<optimized out>, __first=<optimized out>) at /usr/include/c++/9/bits/stl_construct.h:137
+#13 std::_Destroy<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > (__last=0x5555555835e0, __first=<optimized out>)
+    at /usr/include/c++/9/bits/stl_construct.h:206
+#14 std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::~vector (this=0x7fffffffe2f8,
+        __in_chrg=<optimized out>) at /usr/include/c++/9/bits/stl_vector.h:677
+#15 CLBase::~CLBase (this=0x7fffffffe2a0, __in_chrg=<optimized out>) at src/command_line.h:28
+#16 CLConvert::~CLConvert (this=0x7fffffffe2a0, __in_chrg=<optimized out>) at src/command_line.h:223
+#17 0x0000555555557e25 in main (argc=<optimized out>, argv=<optimized out>) at src/converter.cc:31
