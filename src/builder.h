@@ -250,8 +250,13 @@ class BuilderBase {
     }
 
     //revert offsets
-    for(int i = offsets.size(); i >= 0; i--){
-        offsets[i] = i != 0 ? offsets[i-1] : 0;
+    for(SGOffset i = offsets.size(); i >= 0; i--){
+        //offsets[i] = i != (SGOffset)0 ? offsets[i-1] : (SGOffset)0;
+        if (i != 0) {
+          offsets[i] = std::move(offsets[i-1]);
+        } else {
+          offsets[i] = 0;
+        }
     }
 
     // IF: INCOMING
