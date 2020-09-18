@@ -277,6 +277,7 @@ class BuilderBase {
       n = neighs[0];
       pvector<Edge> missingInv;
       //  identify needed inverses
+      //for (int v = 0; v < static_cast<int>(offsets.size() - 1); v++) {
       for (int v = 0; v < static_cast<int>(offsets.size() - 1); v++) {
         int numOutNeighs = offsets[v+1] - offsets[v];
         for (int i = 0; i < numOutNeighs; i++, n++) {
@@ -301,7 +302,7 @@ class BuilderBase {
       int mi = missingInv.size() - 1;
       for(int i = num_nodes_; i > 0; i--){
         for(; N+1 > offsets[i-1]; N--){
-          if((i - 1) == missingInv[mi].u){
+          if(mi >= 0 && (i - 1) == missingInv[mi].u){
             (*neighs)[N] = missingInv[mi].v;
             mi--;
           } else {
