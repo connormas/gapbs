@@ -10,6 +10,7 @@
 #include <functional>
 #include <type_traits>
 #include <utility>
+#include <assert.h>
 
 #include "command_line.h"
 #include "generator.h"
@@ -212,7 +213,6 @@ class BuilderBase {
                       DestID_*** inv_index, DestID_** inv_neighs){
 
     std::sort(el.begin(), el.end());
-    assert(2+2 == 4, "passed assert, now building in place\n");
     // INITIAL PRINTING OF EDGELIST AND OTHER STUFF FOR DEBUGGING 
     /*std::cout << "Edgelist initially:\n";
     for (Edge e : el) {
@@ -235,9 +235,9 @@ class BuilderBase {
     pvector<NodeID_> degrees = CountDegrees(el, false);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     pvector<NodeID_> indegrees = CountDegrees(el, true);
-    *neighs = (DestID_*)el.data();
+    *neighs = reinterpret_cast<DestID_*>(el.data());
     int elLength = el.size();
-    *inv_neighs = (DestID_*)el.data();
+    *inv_neighs = reinterpret_cast<DestID_*>(el.data());
 
     // OUT GOING NEIGHBORS
     // #pragma omp parallel for <- NOTE: may require another sort
@@ -250,27 +250,24 @@ class BuilderBase {
     }
 
     // shift offsets right to revert them
-
     for (SGOffset i = offsets.size()-1; i >= 0; i--) {
       offsets[i] = i != 0 ? offsets[i-1] : 0;
     }
     
-    //offsets = ParallelPrefixSum(degrees);
-
     // IF: INCOMING
     // ELSE: INVERSE
     if (!symmetrize_) {
       // write in-neighs to new malloc'd memory
-      *neighs = (DestID_*)std::realloc((DestID_*)el.data(), (elLength * sizeof(DestID_)));
+      *neighs = static_cast<DestID_*>(std::realloc((DestID_*)el.data(), (elLength * sizeof(DestID_))));
       pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
       *inv_neighs = new DestID_[inoffsets[num_nodes_]];
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
       
       //DestID_* N = (DestID_*)(neighs[0]);
-      for (int i = 0; i < (int)degrees.size(); i++) {
-        for (int j = 0; j < (int)degrees[i]; j++) {
-          NodeID_ u = (NodeID_)(*((*index)[i] + j));
+      for (int i = 0; i < static_cast<int>(degrees.size()); i++) {
+        for (int j = 0; j < static_cast<int>(degrees[i]); j++) {
+          NodeID_ u = static_cast<NodeID_>(*((*index)[i] + j));
           //(*inv_neighs)[fetch_and_add(inoffsets[*N], 1)] = i;
           (*inv_neighs)[fetch_and_add(inoffsets[u], 1)] = i;
         }
@@ -280,7 +277,7 @@ class BuilderBase {
       n = neighs[0];
       pvector<Edge> missingInv;
       //  identify needed inverses
-      for (int v = 0; v < (int)offsets.size() - 1; v++) {
+      for (int v = 0; v < static_cast<int>(offsets.size() - 1); v++) {
         int numOutNeighs = offsets[v+1] - offsets[v];
         for (int i = 0; i < numOutNeighs; i++, n++) {
           if (!(std::binary_search((*neighs) + offsets[*n], (*neighs) + offsets[*n+1], (DestID_)v))) {
@@ -298,7 +295,7 @@ class BuilderBase {
       offsets = ParallelPrefixSum(degrees);
 
       //  fill in neighs from the back, sort in place
-      *neighs = (DestID_*)std::realloc(*neighs, offsets[num_nodes_] * sizeof(DestID_));
+      *neighs = static_cast<DestID_*>(std::realloc(*neighs, offsets[num_nodes_] * sizeof(DestID_)));
       int N = offsets[num_nodes_] - 1;
       int k = offsets[num_nodes_] - missingInv.size() - 1;
       int mi = missingInv.size() - 1;
