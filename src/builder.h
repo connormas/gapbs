@@ -211,14 +211,25 @@ class BuilderBase {
   */
   void MakeCSRInPlace(EdgeList &el, bool transpose, DestID_*** index, DestID_** neighs,
                       DestID_*** inv_index, DestID_** inv_neighs){
-
+    
+    // Initial Sort
     std::sort(el.begin(), el.end());
-    // INITIAL PRINTING OF EDGELIST AND OTHER STUFF FOR DEBUGGING 
-    /*std::cout << "Edgelist initially:\n";
-    for (Edge e : el) {
-      std::cout << "(" << (e).u << ", " << (e).v << ") ";
+    
+    // cannot build graph with incoming edges only
+    if (transpose && !symmetrize_) {
+      std::cerr << "In-place building does not support building graphs with incoming edges only\n";
+      exit(1);
+    }
+    if (needs_weights_) {
+      std::cerr << "In-place building does not support adding weights to graphs\n";
+      exit(1);
+    }
+    /*
+    if (input is weighted) {
+      std::cerr << "In-place building does not support building weighted graphs\n";
+      exit(1);
     } 
-    std::cout << std::endl;*/
+    */
 
     // SQUISH IN PLACE
     //  remove duplicate edges
@@ -264,11 +275,9 @@ class BuilderBase {
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
       
-      //DestID_* N = (DestID_*)(neighs[0]);
       for (int i = 0; i < static_cast<int>(degrees.size()); i++) {
         for (int j = 0; j < static_cast<int>(degrees[i]); j++) {
           NodeID_ u = static_cast<NodeID_>(*((*index)[i] + j));
-          //(*inv_neighs)[fetch_and_add(inoffsets[*N], 1)] = i;
           (*inv_neighs)[fetch_and_add(inoffsets[u], 1)] = i;
         }
       }
@@ -277,7 +286,6 @@ class BuilderBase {
       n = neighs[0];
       pvector<Edge> missingInv;
       //  identify needed inverses
-      //for (int v = 0; v < static_cast<int>(offsets.size() - 1); v++) {
       for (int v = 0; v < static_cast<int>(offsets.size() - 1); v++) {
         int numOutNeighs = offsets[v+1] - offsets[v];
         for (int i = 0; i < numOutNeighs; i++, n++) {
