@@ -220,15 +220,11 @@ class BuilderBase {
       std::cerr << "In-place building does not support building graphs with incoming edges only\n";
       exit(1);
     }
-    if (needs_weights_) {
-      std::cerr << "In-place building does not support adding weights to graphs\n";
+    /*
+    if ((dynamic_cast<WNode*>( (el.begin()).u )) != nullptr) {
+      std::cerr << "In-place building does not support weighted input graphs\n";
       exit(1);
     }
-    /*
-    if (input is weighted) {
-      std::cerr << "In-place building does not support building weighted graphs\n";
-      exit(1);
-    } 
     */
 
     // SQUISH IN PLACE
@@ -385,6 +381,10 @@ class BuilderBase {
     {  // extra scope to trigger earlier deletion of el (save memory)
       inPlace_ = mFlag;
       EdgeList el;
+      if (inPlace_ && needs_weights_) {
+        std::cerr << "In-place building does not support adding weights to graphs\n";
+        exit(1);  
+      }
       if (cli_.filename() != "") {
         Reader<NodeID_, DestID_, WeightT_, invert> r(cli_.filename());
         if ((r.GetSuffix() == ".sg") || (r.GetSuffix() == ".wsg")) {
@@ -399,7 +399,6 @@ class BuilderBase {
       g = MakeGraphFromEL(el);
     }
     if (inPlace_) {
-      std::cout << "no squishgraph(g)\n";
       return g;
     } else {
       return SquishGraph(g);
