@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <utility>
 #include <assert.h>
+#include <string.h>
 
 #include "command_line.h"
 #include "generator.h"
@@ -218,14 +219,17 @@ class BuilderBase {
     // cannot build graph with incoming edges only
     if (transpose && !symmetrize_) {
       std::cerr << "In-place building does not support building graphs with incoming edges only\n";
-      exit(1);
+      exit(-31);
     }
-    /*
-    if ((dynamic_cast<WNode*>( (el.begin()).u )) != nullptr) {
-      std::cerr << "In-place building does not support weighted input graphs\n";
-      exit(1);
+    
+    {  // extra scope to delete e
+      //Edge e = *(el.begin());
+      //if (strcmp(typeid(e.u).name(), "i\n") == false) { // std::is_same ::value
+      if (!std::is_same<NodeID_, DestID_>::value) {
+        std::cerr << "In-place building does not support weighted input graphs\n";
+        exit(-32);
+      }
     }
-    */
 
     // SQUISH IN PLACE
     //  remove duplicate edges
@@ -237,6 +241,7 @@ class BuilderBase {
     new_end = std::remove_if(el.begin(), el.end(), [](Edge e){return e.u == e.v;});
     if (new_end != el.end())
       el.resize(new_end - el.begin());
+
 
     // VARIABLE & OBJECT DECLARATIONS
     pvector<NodeID_> degrees = CountDegrees(el, false);
@@ -271,23 +276,22 @@ class BuilderBase {
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
       
-      for (int i = 0; i < static_cast<int>(degrees.size()); i++) {
-        for (int j = 0; j < static_cast<int>(degrees[i]); j++) {
-          NodeID_ u = static_cast<NodeID_>(*((*index)[i] + j));
+      for (size_t i = 0; i < (degrees.size()); i++) {
+        for (NodeID_ j = 0; j < (degrees[i]); j++) {
+          NodeID_ u = static_cast<NodeID_>((*index)[i][j]);
           (*inv_neighs)[fetch_and_add(inoffsets[u], 1)] = i;
         }
       }
     } else {
-      DestID_* n = neighs[0];
-      n = neighs[0];
       pvector<Edge> missingInv;
       //  identify needed inverses
-      for (int v = 0; v < static_cast<int>(offsets.size() - 1); v++) {
+      for (size_t v = 0; v < (offsets.size() - 1); v++) {
         int numOutNeighs = offsets[v+1] - offsets[v];
-        for (int i = 0; i < numOutNeighs; i++, n++) {
-          if (!(std::binary_search((*neighs) + offsets[*n], (*neighs) + offsets[*n+1], (DestID_)v))) {
-            Edge e(*n, v);
-            missingInv.push_back(e);
+        for (int i = 0; i < numOutNeighs; i++) {
+          DestID_ n = (*neighs + offsets[v])[i]; 
+          if (!(std::binary_search((*neighs) + offsets[n], 
+                                   (*neighs) + offsets[n+1], (DestID_)v))) {
+            missingInv.push_back(Edge(n, v));
           }
         }
       }
@@ -301,11 +305,11 @@ class BuilderBase {
 
       //  fill in neighs from the back, sort in place
       *neighs = static_cast<DestID_*>(std::realloc(*neighs, offsets[num_nodes_] * sizeof(DestID_)));
-      int N = offsets[num_nodes_] - 1;
       int k = offsets[num_nodes_] - missingInv.size() - 1;
       int mi = missingInv.size() - 1;
-      for(int i = num_nodes_; i > 0; i--){
-        for(; N+1 > offsets[i-1]; N--){
+      for (int i = num_nodes_; i > 0; i--) {
+        NodeID_ N;
+        for (N = offsets[i] - 1; N+1 > offsets[i-1]; N--) {
           if(mi >= 0 && (i - 1) == missingInv[mi].u){
             (*neighs)[N] = missingInv[mi].v;
             mi--;
@@ -315,7 +319,8 @@ class BuilderBase {
           }
         }
         if (degrees[i-1] != 0) {
-          std::sort((&(*neighs)[N] + 1), (&(*neighs)[N] + degrees[i-1] + 1));
+          //std::sort((&(*neighs)[N] + 1), (&(*neighs)[N] + degrees[i-1] + 1));
+          std::sort((*neighs + N + 1), (*neighs + N + degrees[i-1] + 1));
         }
       }
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
@@ -383,7 +388,7 @@ class BuilderBase {
       EdgeList el;
       if (inPlace_ && needs_weights_) {
         std::cerr << "In-place building does not support adding weights to graphs\n";
-        exit(1);  
+        exit(-30);  
       }
       if (cli_.filename() != "") {
         Reader<NodeID_, DestID_, WeightT_, invert> r(cli_.filename());
