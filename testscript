@@ -13,7 +13,7 @@ touch timeresults
 
 # run tests at scale 15, 18, 20, 22
 2>timeresults /usr/bin/time --verbose ./converter -g 15 -s -m -b kg15-s-m.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
+grep "[[:blank:]]*Maximum resident" ./timeresults >> ./tsresult
 2>timeresults /usr/bin/time --verbose ./converter -g 15 -s -b kg15-s.sg | grep "Build" >> tsresult
 grep "Maximum resident" ./timeresults >> ./tsresult
 2>timeresults /usr/bin/time --verbose ./converter -g 15 -m -b kg15-m.sg | grep "Build" >> tsresult
