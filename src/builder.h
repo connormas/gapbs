@@ -216,6 +216,15 @@ class BuilderBase {
 
     // initial sort
     std::sort(el.begin(), el.end());
+    
+    {  // extra scope to delete e
+      //Edge e = *(el.begin());
+      //if (strcmp(typeid(e.u).name(), "i\n") == false) { // std::is_same ::value
+      if (!std::is_same<NodeID_, DestID_>::value) {
+        std::cerr << "In-place building does not support weighted input graphs\n";
+        exit(-32);
+      }
+    }
 
     // SQUISH IN PLACE
     //  remove duplicate edges
@@ -266,7 +275,6 @@ class BuilderBase {
       pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
       *inv_neighs = new DestID_[inoffsets[num_nodes_]];
       *inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inoffsets, *inv_neighs);
-
       for (size_t i = 0; i < (degrees.size()); i++) {
         for (NodeID_ j = 0; j < (degrees[i]); j++) {
       // for (NodeID_ u = 0; u < (static_cast<NodeID_>
@@ -289,7 +297,7 @@ class BuilderBase {
           DestID_ n = (*neighs + offsets[v])[i];
           if (!(std::binary_search((*neighs) + offsets[n],
                                    (*neighs) + offsets[n+1], (DestID_)v))) {
-          // if (!(std::binary_search(index[n], index[n+1], v))) {
+            // if (!(std::binary_search(index[n], index[n+1], v))) {
             missingInv.push_back(Edge(n, v));
           }
         }
