@@ -12,40 +12,16 @@ touch timeresults
 # for future reference awk -F '[ ):]*' '$0=$NF' ./tsresult
 
 # run tests at scale 15, 18, 20, 22
-2>timeresults /usr/bin/time --verbose ./converter -g 15 -s -m -b kg15-s-m.sg | grep "Build" >> tsresult
-grep "[[:blank:]]*Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 15 -s -b kg15-s.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 15 -m -b kg15-m.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 15 -b kg15.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-
-2>timeresults /usr/bin/time --verbose ./converter -g 18 -s -m -b kg18-s-m.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 18 -s -b kg18-s.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 18 -m -b kg18-m.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 18 -b kg18.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-
-2>timeresults /usr/bin/time --verbose ./converter -g 20 -s -m -b kg20-s-m.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 20 -s -b kg20-s.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 20 -m -b kg20-m.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 20 -b kg20.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-
-2>timeresults /usr/bin/time --verbose ./converter -g 22 -s -m -b kg22-s-m.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 22 -s -b kg22-s.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 22 -m -b kg22-m.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
-2>timeresults /usr/bin/time --verbose ./converter -g 22 -b kg22.sg | grep "Build" >> tsresult
-grep "Maximum resident" ./timeresults >> ./tsresult
+for scale in 15 18 20 22
+do
+  2>timeresults /usr/bin/time --verbose ./converter -g $scale -s -m -b kg-s-m.sg | grep "Build" >> tsresult
+  grep "Maximum resident" ./timeresults >> ./tsresult
+  2>timeresults /usr/bin/time --verbose ./converter -g $scale -s -b kg-s.sg | grep "Build" >> tsresult
+  grep "Maximum resident" ./timeresults >> ./tsresult
+  2>timeresults /usr/bin/time --verbose ./converter -g $scale -m -b kg-m.sg | grep "Build" >> tsresult
+  grep "Maximum resident" ./timeresults >> ./tsresult
+  2>timeresults /usr/bin/time --verbose ./converter -g $scale -b kg.sg | grep "Build" >> tsresult
+  grep "Maximum resident" ./timeresults >> ./tsresult
+done
 
 rm timeresults
