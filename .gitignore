@@ -12,3 +12,7 @@ benchmark/out/*.out
 benchmark/graphs/*.sg
 benchmark/graphs/*.wsg
 benchmark/graphs/raw/*
+
+cpplint.py
+
+roadcopy.el
