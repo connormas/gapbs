@@ -57,19 +57,27 @@ class pvector {
   }
 
   // want move assignment
-  pvector& operator= (pvector &&other) {
-    start_ = other.start_;
-    end_size_ = other.end_size_;
-    end_capacity_ = other.end_capacity_;
-    other.start_ = nullptr;
-    other.end_size_ = nullptr;
-    other.end_capacity_ = nullptr;
+  pvector& operator= (pvector&& other) {
+    if (this != &other) {
+      freeStart();
+      start_ = other.start_;
+      end_size_ = other.end_size_;
+      end_capacity_ = other.end_capacity_;
+      other.start_ = nullptr;
+      other.end_size_ = nullptr;
+      other.end_capacity_ = nullptr;
+    } 
     return *this;
   }
 
-  ~pvector() {
-    if (start_ != nullptr && false)
+  void freeStart(){
+    if (start_ != nullptr) {
       delete[] start_;
+    }
+  }
+
+  ~pvector() {
+    freeStart();
   }
 
   // not thread-safe
@@ -85,9 +93,17 @@ class pvector {
       end_capacity_ = start_ + num_elements;
     }
   }
-    
-  void inPlace(pvector &p) {
-    p.buildInPlace = true;
+
+  void leak() {
+    start_ = nullptr;
+  }
+
+  void smallGrowthFactor() {
+    growth_factor = 1.1;
+  }
+
+  void resetGrowthFactor() {
+    growth_factor = 2;
   }
 
   bool empty() {
@@ -158,7 +174,7 @@ class pvector {
   T_* end_size_;
   T_* end_capacity_;
   bool buildInPlace;
-  static const size_t growth_factor = 2;
+  size_t growth_factor = 2; //was static const
 };
 
 #endif  // PVECTOR_H_
