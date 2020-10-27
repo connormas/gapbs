@@ -162,3 +162,9 @@ for v in vertices:
 - - - if v is not outneigh of n:
 - - - - add Edge(n, v) to neededInverseEdges
 
+
+new algorithm to get around missingInv getting too big
+1. same pass over, identifying needed inverses
+    - store a count of needed inverses for each vertex
+2. space out existing edge list to accomadate
+3. pass over spaced out list and add inverses
