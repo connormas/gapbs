@@ -1,27 +1,46 @@
 #!/bin/bash
 
 # remove output file if it already exists
-if [ -e ./tsresult ]; then
-  rm tsresult
+if [ -e ./NEWresult ]; then
+  rm NEWresult
 fi
 
 # make new output file and temp file
-touch tsresult
+
+touch NEWresult
 touch timeresults
 
 # for future reference awk -F '[ ):]*' '$0=$NF' ./tsresult
 
+# cli for building process
+scale=20
+symm="-s"  # should be "" for non-symm and "-s" for symm
+
+echo "This script tests mem usage and build time." >> NEWresult
+echo "If anything appears between" >> NEWresult
+echo >> NEWresult
+echo "*********************" >> NEWresult
+echo "*********************" >> NEWresult
+echo >> NEWresult
+echo "that means that the two graphs made in the two building" >> NEWresult
+echo "processes differ, and comparisons are invalid." >> NEWresult
+echo "all graphs are of scale $scale" >> NEWresult
+
 # run tests at scale 15, 18, 20, 22
-for scale in 15 18 20 22
+for degree in 2 4 6 8 10 11 12 15 17 20 
 do
-  2>timeresults /usr/bin/time --verbose ./converter -g $scale -s -m -b kg-s-m.sg | grep "Build" >> tsresult
-  grep "Maximum resident" ./timeresults >> ./tsresult
-  2>timeresults /usr/bin/time --verbose ./converter -g $scale -s -b kg-s.sg | grep "Build" >> tsresult
-  grep "Maximum resident" ./timeresults >> ./tsresult
-  2>timeresults /usr/bin/time --verbose ./converter -g $scale -m -b kg-m.sg | grep "Build" >> tsresult
-  grep "Maximum resident" ./timeresults >> ./tsresult
-  2>timeresults /usr/bin/time --verbose ./converter -g $scale -b kg.sg | grep "Build" >> tsresult
-  grep "Maximum resident" ./timeresults >> ./tsresult
+  echo "" >> NEWresult
+  echo "Building In Place -k $degree" >> NEWresult
+  2>timeresults /usr/bin/time --verbose ./converter -g $scale -k $degree $symm -m -b tsM.sg | grep "Build" >> NEWresult
+  grep "Maximum resident" ./timeresults >> ./NEWresult
+
+  echo "Original Build Process" >> NEWresult
+  2>timeresults /usr/bin/time --verbose ./converter -g $scale -k $degree $symm -b ts.sg | grep "Build" >> NEWresult
+  grep "Maximum resident" ./timeresults >> ./NEWresult
+
+  echo "**********************" >> NEWresult  
+  2>timeresults diff kg-s-m.sg kg-s.sg | grep "Binary" >> NEWresult 
+  echo "**********************" >> NEWresult
 done
 
 rm timeresults

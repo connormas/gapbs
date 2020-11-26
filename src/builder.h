@@ -216,23 +216,19 @@ class BuilderBase {
 
     // initial sort
     std::sort(el.begin(), el.end());
-    
-    {  // extra scope to delete e
-      //Edge e = *(el.begin());
-      //if (strcmp(typeid(e.u).name(), "i\n") == false) { // std::is_same ::value
-      if (!std::is_same<NodeID_, DestID_>::value) {
-        std::cerr << "In-place building does not support weighted input graphs\n";
-        exit(-32);
-      }
+
+    if (!std::is_same<NodeID_, DestID_>::value) {
+      std::cerr << "In-place building does not support weighted input graphs\n";
+      exit(-32);
     }
 
     // SQUISH IN PLACE
-    //  remove duplicate edges
+    // remove duplicate edges
     auto new_end = std::unique(el.begin(), el.end());
     if (new_end != el.end())
       el.resize(new_end - el.begin());
 
-    //  remove self loops
+    // remove self loops
     new_end = std::remove_if(el.begin(), el.end(),
                              [](Edge e){ return e.u == e.v; });
     if (new_end != el.end())
@@ -252,10 +248,9 @@ class BuilderBase {
     for (Edge e : el) {
       if (symmetrize_ || (!symmetrize_ && !transpose)) {
         (*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
-      //(*neighs)[offsets[e.u]++] = e.v;
+        // (*neighs)[offsets[e.u]++] = e.v;
       }
     }
-
 
     // shift offsets right to revert them
     for (SGOffset i = offsets.size()-1; i >= 0; i--) {
@@ -270,7 +265,6 @@ class BuilderBase {
       std::cout << "Not Symmetrized\n";
       *neighs = static_cast<DestID_*>(std::realloc
                            (*neighs, (elLength * sizeof(DestID_))));
-    
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
       pvector<SGOffset> inoffsets = ParallelPrefixSum(indegrees);
       *inv_neighs = new DestID_[inoffsets[num_nodes_]];
@@ -288,65 +282,59 @@ class BuilderBase {
         }
       }
     } else {
-      // find needed inverses and add to new pvector
-      std::cout << "Symmetrized\n";
-      pvector<Edge> missingInv;
-      for (size_t v = 0; v < (offsets.size() - 1); v++) {
-        int numOutNeighs = offsets[v+1] - offsets[v];
-        for (int i = 0; i < numOutNeighs; i++) {
-          DestID_ n = (*neighs + offsets[v])[i];
-          if (!(std::binary_search((*neighs) + offsets[n],
-                                   (*neighs) + offsets[n+1], (DestID_)v))) {
-            // if (!(std::binary_search(index[n], index[n+1], v))) {
-            missingInv.push_back(Edge(n, v));
-          }
-        }
-      }
-
-      /* 
+      // PASS ONE count number of needed inverses
       pvector<int> numNeededInvs(num_nodes_, 0);
       for (size_t v = 0; v < (offsets.size() - 1); v++) {
-        int numOutNeighs = offsets[v+1] - offsets[v];
+        int numOutNeighs = offsets[v+1] - offsets[v]; // dont need new var
         for (int i = 0; i < numOutNeighs; i++) {
           DestID_ n = (*neighs + offsets[v])[i];
           if (!(std::binary_search((*neighs) + offsets[n],
                                    (*neighs) + offsets[n+1], (DestID_)v))) {
-            std::cout << "in missinginv algorithm, adding " 
-                      << "(" << n << ", " << v << ")\n";  
             numNeededInvs[n] = numNeededInvs[n] + 1;
-            missingInv.push_back(Edge(n, v));
           }
         }
       }
-      */
-      //  increment degrees, then make new offsets from that
-      std::sort(missingInv.begin(), missingInv.end());
-      for (Edge e : missingInv) {
-        degrees[e.u] += 1;
+      //  increment degrees, make new degrees, realloc neighs
+      int mi = 0;
+      for (size_t i = 0; i < numNeededInvs.size(); i++) {
+        degrees[i] = degrees[i] + numNeededInvs[i];
+        mi += numNeededInvs[i];
       }
       offsets = ParallelPrefixSum(degrees);
+      size_t newsize = (offsets[num_nodes_] * sizeof(DestID_));
+      *neighs = static_cast<DestID_*>(std::realloc(*neighs, newsize));
+      // TODO check if realloc succeeded
 
-      //  fill in neighs from the back, sort in place
-      *neighs = static_cast<DestID_*>(std::realloc
-                                     (*neighs, offsets[num_nodes_] *
-                                      sizeof(DestID_)));
-      int k = offsets[num_nodes_] - missingInv.size() - 1;
-      int mi = missingInv.size() - 1;
-      for (int i = num_nodes_; i > 0; i--) {
+      // PASS TWO write existing neighs
+      // TODO writeback -> tailIndex; mi -> totalmissinginvs
+      NodeID_ writeBack = offsets[num_nodes_] - 1;
+      for (int v = num_nodes_; v > 0; v--) {
         NodeID_ N;
-        for (N = offsets[i] - 1; N+1 > offsets[i-1]; N--) {
-          if (mi >= 0 && (i - 1) == missingInv[mi].u) {
-            (*neighs)[N] = missingInv[mi].v;
-            mi--;
-          } else {
-            (*neighs)[N] = (*neighs)[k];
-            k--;
+        for (N = offsets[v]; N > (offsets[v-1] + numNeededInvs[v-1]); N--) {
+          (*neighs)[writeBack] = (*neighs)[N-mi-1];
+          writeBack--;
+        }
+        mi = mi - numNeededInvs[v-1];
+        writeBack = writeBack - numNeededInvs[v-1];
+      }
+
+      // PASS THREE
+      // bin search for and write missing inv
+      writeBack = offsets[num_nodes_] - 1;
+      for (int v = 0; v < num_nodes_; v++) {
+        writeBack = writeBack - numNeededInvs[v-1];
+        int numOutNeighs = offsets[v+1] - offsets[v] - numNeededInvs[v];
+        for (int i = 0; i < numOutNeighs; i++) {
+          DestID_ n = (*neighs + offsets[v] + numNeededInvs[v])[i];
+          if (!(std::binary_search(((*neighs) + offsets[n] + numNeededInvs[n]),
+                                    ((*neighs) + offsets[n+1]), (DestID_)v))) {
+            (*neighs)[offsets[n] + numNeededInvs[n] - 1] = (DestID_)v;
+            numNeededInvs[n] -= 1;
           }
         }
-        if (degrees[i-1] != 0) {
-          // std::sort((&(*neighs)[N] + 1), (&(*neighs)[N] + degrees[i-1] + 1));
-          std::sort((*neighs + N + 1), (*neighs + N + degrees[i-1] + 1));
-        }
+      }
+      for (int v = 0; v < num_nodes_; v++) {
+        std::sort(&((*neighs)[offsets[v]]), &((*neighs)[offsets[v+1]]));
       }
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     }
