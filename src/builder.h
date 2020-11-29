@@ -183,31 +183,15 @@ class BuilderBase {
     }
   }
 
-  /*
-  This function takes an EdgeList Obj by reference. It assumes this is an 
-  edgelist that has been partially overwritten with the outneighs of the 
-  original EdgeList data. This code makes and returns a pvector called 
-  inoffsets that will contain the offsets for writing the inneighs.
-  NOTE: not currently being used, may be cut out eventually
-  */
-  pvector<SGOffset> MakeOffsetsFromOutNeighs(const EdgeList &el, int elLength) {
-    pvector<SGOffset> inoffsets(num_nodes_ + 1, 0);
-    DestID_* N = static_cast<DestID_*>(el.data());
-    int total = 0;
-    for (int i = 0; i < static_cast<int>(elLength); i++, N++) {
-      inoffsets[*N + 1]++;
-    }
-    for (int i = 0; i < static_cast<int>(inoffsets.size()); i++) {
-      total += inoffsets[i];
-      inoffsets[i] = total;
-    }
-    return inoffsets;
-  }
 
   /*
-  Code that attempts to build in-place and keep peak mem
-  usage low. We do this by repurposing the EdgeList pvector and
-  using it as the new neighbors array.
+  In-Place Graph Building Steps
+    - sort and remove self loops and redundant edges
+    - overwrite given edgelist with outgoing neighbors
+    - if graph not being symmetrized
+      - continue overwriting edgelist with incoming neighbors
+    - if being symmetrized
+      - search for needed inverses and continue to write to edgelist
   */
   void MakeCSRInPlace(EdgeList &el, bool transpose, DestID_*** index,
                       DestID_** neighs, DestID_*** inv_index,
@@ -244,7 +228,6 @@ class BuilderBase {
     *inv_neighs = reinterpret_cast<DestID_*>(el.data());
 
     // OUT GOING NEIGHBORS
-    // #pragma omp parallel for <- NOTE: may require another sort
     for (Edge e : el) {
       if (symmetrize_ || (!symmetrize_ && !transpose)) {
         (*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
