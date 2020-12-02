@@ -1,4 +1,4 @@
-// copyright (c) 2015, The Regents of the University of California (Regents)
+// Copyright (c) 2015, The Regents of the University of California (Regents)
 // See LICENSE.txt for license details
 
 #ifndef BUILDER_H_
@@ -207,12 +207,9 @@ class BuilderBase {
     }
 
     // SQUISH IN PLACE
-    // remove duplicate edges
     auto new_end = std::unique(el.begin(), el.end());
     if (new_end != el.end())
       el.resize(new_end - el.begin());
-
-    // remove self loops
     new_end = std::remove_if(el.begin(), el.end(),
                              [](Edge e){ return e.u == e.v; });
     if (new_end != el.end())
@@ -230,8 +227,8 @@ class BuilderBase {
     // OUT GOING NEIGHBORS
     for (Edge e : el) {
       if (symmetrize_ || (!symmetrize_ && !transpose)) {
-        (*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
-        // (*neighs)[offsets[e.u]++] = e.v;
+        //(*neighs)[fetch_and_add(offsets[e.u], 1)] = e.v;
+        (*neighs)[offsets[e.u]++] = e.v;
       }
     }
 
