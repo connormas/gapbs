@@ -318,6 +318,7 @@ class BuilderBase {
       }
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     }
+  }
 
   /*
   Graph Bulding Steps (for CSR):
@@ -328,6 +329,7 @@ class BuilderBase {
   */
   void MakeCSR(const EdgeList &el, bool transpose, DestID_*** index,
                DestID_** neighs) {
+    std::cout << "normalbuild\n";
     pvector<NodeID_> degrees = CountDegrees(el, transpose);
     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
     *neighs = new DestID_[offsets[num_nodes_]];
