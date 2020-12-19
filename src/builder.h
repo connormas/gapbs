@@ -273,34 +273,36 @@ class BuilderBase {
         }
       }
       //  increment degrees, make new degrees, realloc neighs
-      int mi = 0;
+      int totalMissingInv = 0;
       for (size_t i = 0; i < numNeededInvs.size(); i++) {
         degrees[i] = degrees[i] + numNeededInvs[i];
-        mi += numNeededInvs[i];
+        totalMissingInv += numNeededInvs[i];
       }
       offsets = ParallelPrefixSum(degrees);
       size_t newsize = (offsets[num_nodes_] * sizeof(DestID_));
       *neighs = static_cast<DestID_*>(std::realloc(*neighs, newsize));
-      // TODO check if realloc succeeded
+      if (*neighs == nullptr) {
+        std::cout << "Call to realloc() failed.\n";
+        exit(-33);
+      }
 
       // PASS TWO write existing neighs
-      // TODO writeback -> tailIndex; mi -> totalmissinginvs
-      NodeID_ writeBack = offsets[num_nodes_] - 1;
+      NodeID_ tailIndex = offsets[num_nodes_] - 1;
       for (int v = num_nodes_; v > 0; v--) {
         NodeID_ N;
         for (N = offsets[v]; N > (offsets[v-1] + numNeededInvs[v-1]); N--) {
-          (*neighs)[writeBack] = (*neighs)[N-mi-1];
-          writeBack--;
+          (*neighs)[tailIndex] = (*neighs)[N-totalMissingInv-1];
+          tailIndex--;
         }
-        mi = mi - numNeededInvs[v-1];
-        writeBack = writeBack - numNeededInvs[v-1];
+        totalMissingInv = totalMissingInv - numNeededInvs[v-1];
+        tailIndex = tailIndex - numNeededInvs[v-1];
       }
 
       // PASS THREE
       // bin search for and write missing inv
-      writeBack = offsets[num_nodes_] - 1;
+      tailIndex = offsets[num_nodes_] - 1;
       for (int v = 0; v < num_nodes_; v++) {
-        writeBack = writeBack - numNeededInvs[v-1];
+        tailIndex = tailIndex - numNeededInvs[v-1];
         int numOutNeighs = offsets[v+1] - offsets[v] - numNeededInvs[v];
         for (int i = 0; i < numOutNeighs; i++) {
           DestID_ n = (*neighs + offsets[v] + numNeededInvs[v])[i];
@@ -316,7 +318,6 @@ class BuilderBase {
       }
       *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
     }
-  }
 
   /*
   Graph Bulding Steps (for CSR):
