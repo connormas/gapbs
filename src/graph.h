@@ -247,8 +247,9 @@ class CSRGraph {
     NodeID_ length = offsets.size();
     DestID_** index = new DestID_*[length];
     #pragma omp parallel for
-    for (NodeID_ n=0; n < length; n++)
+    for (NodeID_ n=0; n < length; n++) {
       index[n] = neighs + offsets[n];
+    }
     return index;
   }
 
