@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# remove output file if it already exists
+if [ -e ./PRresult ]; then
+  rm PRresult
+fi
+
+# make new output file and temp file
+touch PRresultt
+touch timetext
+
+echo "This script runs page rank and measures user and system time."
+
+graphs="kron.sg urand.sg web.sg road.sg twitter.sg"
+
+for g in $graphs; do
+  2>timetext /usr/bin/time --verbose -f $graphs
+  grep "User time" ./timetext >> PRresult
+  grep "System time" ./timetext >> PRresult
+done
+
+rm timetext
