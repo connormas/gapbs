@@ -58,12 +58,27 @@ pvector<ScoreT> PageRankPull(const Graph &g, int max_iters,
   return scores;
 }
 
-
+/*
+PageRank in Pull Direction using Gauss-Seidel method
+Objective: most likely longer interations, but fewer
+           interations to result in a net speedup
+Ideas:
+- initialize scores with node degree
+- update outgoing_contrib on the fly
+*/
 pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
                              double epsilon = 0) {
   const ScoreT init_score = 1.0f / g.num_nodes();
   const ScoreT base_score = (1.0f - kDamp) / g.num_nodes();
   pvector<ScoreT> scores(g.num_nodes(), init_score);
+
+  // initialize scores array with in_degrees of each nodes
+  // any way to declare pvector without initializing values?
+  //#pragma omp parallel for schedule(dynamic, 64)
+  for (int i = 0; i < g.num_nodes(); i++) {
+    scores[i] = g.in_degree(i);
+  }
+  
   pvector<ScoreT> outgoing_contrib(g.num_nodes());
   for (int iter=0; iter < max_iters; iter++) {
     double error = 0;
@@ -83,6 +98,7 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
     if (error < epsilon)
       break;
   }
+  //cout << "scores" << scores[0] << " " << scores[23] << " " << scores [2352345] << " " << scores[234] << endl;
   return scores;
 }
 
@@ -128,8 +144,8 @@ int main(int argc, char* argv[]) {
   Builder b(cli);
   Graph g = b.MakeGraph();
   auto PRBound = [&cli] (const Graph &g) {
-    return PageRankPull(g, cli.max_iters(), cli.tolerance());
-    //return PageRankPullGS(g, cli.max_iters(), cli.tolerance());
+    //return PageRankPull(g, cli.max_iters(), cli.tolerance());
+    return PageRankPullGS(g, cli.max_iters(), cli.tolerance());
   };
   auto VerifierBound = [&cli] (const Graph &g, const pvector<ScoreT> &scores) {
     return PRVerifier(g, scores, cli.tolerance());
