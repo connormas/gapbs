@@ -5,18 +5,17 @@ if [ -e ./PRresult ]; then
   rm PRresult
 fi
 
-# make new output file and temp file
-touch PRresultt
-touch timetext
+# make new output file
+touch PRresult
 
 echo "This script runs page rank and measures user and system time."
+echo "Average time results can befound in file PRresult"
 
 graphs="kron.sg urand.sg web.sg road.sg twitter.sg"
+synth="kron.sg urand.sg"
 
-for g in $graphs; do
-  2>timetext /usr/bin/time --verbose -f $graphs
-  grep "User time" ./timetext >> PRresult
-  grep "System time" ./timetext >> PRresult
+for g in $synth; do
+  echo "Tests for $g" >> PRresult
+  ./pr -f /lscratch/graphs/$g | grep "Average Time:" >> PRresult
+  echo "" >> PRresult
 done
-
-rm timetext
