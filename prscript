@@ -1,21 +1,36 @@
 #!/bin/bash
 
+# name result/output file
+res="prresult"
+out="out"
+
 # remove output file if it already exists
-if [ -e ./PRresult ]; then
-  rm PRresult
+if [ -e ./$res ]; then
+  rm $res
 fi
 
 # make new output file
-touch PRresult
+touch $res
+touch $out
 
 echo "This script runs page rank and measures user and system time."
 echo "Average time results can befound in file PRresult"
 
-graphs="kron.sg urand.sg web.sg road.sg twitter.sg"
+all="kron.sg urand.sg web.sg road.sg twitter.sg"
 synth="kron.sg urand.sg"
 
-for g in $synth; do
-  echo "Tests for $g" >> PRresult
-  ./pr -f /lscratch/graphs/$g | grep "Average Time:" >> PRresult
-  echo "" >> PRresult
-done
+# run tests on group of graphs
+#for g in $synth; do
+#  echo "Tests for $g" >> $res
+#  ./pr -f /lscratch/graphs/$g | grep "Average Time:" >> $res
+#  echo "" >> $res
+#done
+
+# run test on one graph
+echo "Tests for kron" >> $res
+1>$out ./pr -v -g 15 -n 5 -i 1000
+grep "Average Time:" $out >> $res
+grep "Verification:" $out >> $res
+echo "" >> $res
+
+rm $out
