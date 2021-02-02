@@ -18,3 +18,5 @@ cpplint.py
 roadcopy.el
 
 *.bm
+
+*.sh
