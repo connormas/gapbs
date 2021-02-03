@@ -20,3 +20,5 @@ roadcopy.el
 *.bm
 
 *.sh
+
+itertests
