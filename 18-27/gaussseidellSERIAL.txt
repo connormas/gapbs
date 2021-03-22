@@ -1,0 +1,44 @@
+SCALE 17
+  8    0.000095
+Trial Time:          0.03934
+Average Time:        0.03934
+SCALE 18
+  7    0.000098
+Trial Time:          0.08276
+Average Time:        0.08276
+SCALE 19
+  6    0.000093
+Trial Time:          0.20912
+Average Time:        0.20912
+SCALE 20
+ 10    0.000083
+Trial Time:          0.82958
+Average Time:        0.82958
+SCALE 21
+  9    0.000077
+Trial Time:          1.80974
+Average Time:        1.80974
+SCALE 22
+  4    0.000056
+Trial Time:          2.10184
+Average Time:        2.10184
+SCALE 23
+  4    0.000035
+Trial Time:          5.30040
+Average Time:        5.30040
+SCALE 24
+  4    0.000041
+Trial Time:          13.52223
+Average Time:        13.52223
+SCALE 25
+  4    0.000034
+Trial Time:          33.75799
+Average Time:        33.75799
+SCALE 26
+  4    0.000041
+Trial Time:          87.04493
+Average Time:        87.04493
+SCALE 27
+  4    0.000053
+Trial Time:          222.64705
+Average Time:        222.64705
