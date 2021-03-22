@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <iomanip>
 
 #include "benchmark.h"
 #include "builder.h"
@@ -51,10 +52,17 @@ pvector<ScoreT> PageRankPull(const Graph &g, int max_iters,
       scores[u] = base_score + kDamp * incoming_total;
       error += fabs(scores[u] - old_score);
     }
+
+    // PRINTING OF SCORES FOR PRTERM.PY
+    //for (auto s : scores) {
+    //  cerr << s << " ";
+    //} cerr << endl;
+
     printf(" %2d    %lf\n", iter, error);
     if (error < epsilon)
       break;
   }
+  //cerr << "> done w iteration" << endl;
   return scores;
 }
 
@@ -66,25 +74,26 @@ Ideas:
 - initialize scores with node degree
 - update outgoing_contrib on the fly
 */
+
+// Graph g is not longer const
 pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
                              double epsilon = 0) {
   const ScoreT init_score = 1.0f / g.num_nodes();
   const ScoreT base_score = (1.0f - kDamp) / g.num_nodes();
   pvector<ScoreT> scores(g.num_nodes(), init_score);
-
-  // initialize scores array with in_degrees of each nodes
-  // any way to declare pvector without initializing values?
-  //#pragma omp parallel for schedule(dynamic, 64)
-  for (int i = 0; i < g.num_nodes(); i++) {
-    scores[i] = g.in_degree(i);
-  }
-  
   pvector<ScoreT> outgoing_contrib(g.num_nodes());
+  
+  // PRINTING DEGREES FOR PRTERM.PY
+  //cerr << "$ "; 
+  //for (NodeID n = 0; n < g.num_nodes(); n++) {
+  //  cerr << g.out_degree(n) << " ";
+  //} cerr << endl;
+
+  #pragma omp parallel for
+  for (NodeID n=0; n < g.num_nodes(); n++)
+    outgoing_contrib[n] = init_score / g.out_degree(n);
   for (int iter=0; iter < max_iters; iter++) {
     double error = 0;
-    #pragma omp parallel for
-    for (NodeID n=0; n < g.num_nodes(); n++)
-      outgoing_contrib[n] = scores[n] / g.out_degree(n);
     #pragma omp parallel for reduction(+ : error) schedule(dynamic, 64)
     for (NodeID u=0; u < g.num_nodes(); u++) {
       ScoreT incoming_total = 0;
@@ -93,12 +102,19 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
       ScoreT old_score = scores[u];
       scores[u] = base_score + kDamp * incoming_total;
       error += fabs(scores[u] - old_score);
+      outgoing_contrib[u] = scores[u] / g.out_degree(u);
     }
+
+    // PRINTING OF SCORES FOR PRTERM.PY
+    //for (auto s : scores) {
+    //  cerr << std::setw(10) << s << " ";
+    //} cerr << endl;
+
     printf(" %2d    %lf\n", iter, error);
     if (error < epsilon)
       break;
   }
-  //cout << "scores" << scores[0] << " " << scores[23] << " " << scores [2352345] << " " << scores[234] << endl;
+  //cerr << "> done w iteration" << endl;
   return scores;
 }
 
@@ -143,9 +159,15 @@ int main(int argc, char* argv[]) {
     return -1;
   Builder b(cli);
   Graph g = b.MakeGraph();
+  
+  if (relabel) // must be defined with compile time macro 
+    g = Builder::RelabelByDegree(g);
+    
   auto PRBound = [&cli] (const Graph &g) {
-    //return PageRankPull(g, cli.max_iters(), cli.tolerance());
-    return PageRankPullGS(g, cli.max_iters(), cli.tolerance());
+    if (jacobi)
+      return PageRankPull(g, cli.max_iters(), cli.tolerance());
+    else 
+      return PageRankPullGS(g, cli.max_iters(), cli.tolerance());
   };
   auto VerifierBound = [&cli] (const Graph &g, const pvector<ScoreT> &scores) {
     return PRVerifier(g, scores, cli.tolerance());
