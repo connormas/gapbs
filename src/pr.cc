@@ -160,14 +160,14 @@ int main(int argc, char* argv[]) {
   Builder b(cli);
   Graph g = b.MakeGraph();
   
-  if (relabel) // must be defined with compile time macro 
-    g = Builder::RelabelByDegree(g);
+  //if (relabel) // must be defined with compile time macro 
+  //  g = Builder::RelabelByDegree(g);
     
   auto PRBound = [&cli] (const Graph &g) {
-    if (jacobi)
-      return PageRankPull(g, cli.max_iters(), cli.tolerance());
-    else 
-      return PageRankPullGS(g, cli.max_iters(), cli.tolerance());
+  if (false)
+    return PageRankPull(g, cli.max_iters(), cli.tolerance());
+  else 
+    return PageRankPullGS(g, cli.max_iters(), cli.tolerance());
   };
   auto VerifierBound = [&cli] (const Graph &g, const pvector<ScoreT> &scores) {
     return PRVerifier(g, scores, cli.tolerance());

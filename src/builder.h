@@ -420,12 +420,11 @@ class BuilderBase {
     #pragma omp parallel for
     for (NodeID_ n=0; n < g.num_nodes(); n++)
       degree_id_pairs[n] = std::make_pair(g.out_degree(n), n);
-    if (usegreater)   // must be defined with compile time macro
-      std::sort(degree_id_pairs.begin(), degree_id_pairs.end(),
-                std::greater<degree_node_p>());
-    else
-      std::sort(degree_id_pairs.begin(), degree_id_pairs.end(),
-                std::less<degree_node_p>());
+    std::sort(degree_id_pairs.begin(), degree_id_pairs.end(),
+              std::greater<degree_node_p>());
+    //else
+    //  std::sort(degree_id_pairs.begin(), degree_id_pairs.end(),
+    //            std::less<degree_node_p>());
     pvector<NodeID_> degrees(g.num_nodes());
     pvector<NodeID_> new_ids(g.num_nodes());
     #pragma omp parallel for
