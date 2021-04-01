@@ -76,3 +76,29 @@ for SCALE in 17 18 19 20 21 22 23 24 25 26 27 28; do
   $GAPBS_DIR/prgs -u $SCALE -i 5 | grep -B 2 "Average Time" >> $gskout
   $GAPBS_DIR/prj  -u $SCALE -i 5 | grep -B 2 "Average Time" >> $jkout
 done
+
+################################################################
+# TEST FOR REAL WORLD GRAPHS
+################################################################
+
+# bookkeeping
+GRAPHS_DIR=/lscratch/graphs
+gsout="$OUT_DIR/GS-rwg-$THREADS.out"
+jout="$OUT_DIR/J-rwg-$THREADS.out"
+if [ -e $gsout ]; then
+  rm $gsout
+fi                                                                              
+touch $gsout
+if [ -e $jout ]; then
+  rm $jout
+fi                                                                              
+touch $jout
+
+echo "Now doing real world graphs..."
+for graph in road.sg twitter.sg web.sg; do
+  echo "$GRAPHS_DIR/$graph"
+  echo "$graph" >> $gsout
+  echo "$graph" >> $jout 
+  $GAPBS_DIR/prgs -f $GRAPHS_DIR/$graph -i 5 | grep -B 2 "Average Time" >> $gskout
+  $GAPBS_DIR/prj  -f $GRAPHS_DIR/$graph -i 5 | grep -B 2 "Average Time" >> $jkout
+done
