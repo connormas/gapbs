@@ -44,8 +44,8 @@ for SCALE in 17 18 19 20 21 22 23 24 25 26 27 28; do
   echo "kron-$SCALE"  
   echo "SCALE: $SCALE" >> $gskout
   echo "SCALE: $SCALE" >> $jkout
-  $GAPBS_DIR/prgs -g $SCALE -i 5 | grep -B 2 "Average Time" >> $gskout
-  $GAPBS_DIR/prj  -g $SCALE -i 5 | grep -B 2 "Average Time" >> $jkout
+  $GAPBS_DIR/prgs -g $SCALE -n 3 -i 100 | grep -B 2 "Average Time" >> $gskout
+  $GAPBS_DIR/prj  -g $SCALE -n 3 -i 100 | grep -B 2 "Average Time" >> $jkout
 done
 
 ################################################################
@@ -73,8 +73,8 @@ for SCALE in 17 18 19 20 21 22 23 24 25 26 27 28; do
   echo "urand-$SCALE"  
   echo "SCALE: $SCALE" >> $gskout
   echo "SCALE: $SCALE" >> $jkout
-  $GAPBS_DIR/prgs -u $SCALE -i 5 | grep -B 2 "Average Time" >> $gskout
-  $GAPBS_DIR/prj  -u $SCALE -i 5 | grep -B 2 "Average Time" >> $jkout
+  $GAPBS_DIR/prgs -u $SCALE -n 3 -i 100 | grep -B 2 "Average Time" >> $gskout
+  $GAPBS_DIR/prj  -u $SCALE -n 3 -i 100 | grep -B 2 "Average Time" >> $jkout
 done
 
 ################################################################
@@ -99,6 +99,6 @@ for graph in road.sg twitter.sg web.sg; do
   echo "$GRAPHS_DIR/$graph"
   echo "$graph" >> $gsout
   echo "$graph" >> $jout 
-  $GAPBS_DIR/prgs -f $GRAPHS_DIR/$graph -i 5 | grep -B 2 "Average Time" >> $gskout
-  $GAPBS_DIR/prj  -f $GRAPHS_DIR/$graph -i 5 | grep -B 2 "Average Time" >> $jkout
+  $GAPBS_DIR/prgs -f $GRAPHS_DIR/$graph -n 3 -i 100 | grep -B 2 "Average Time" >> $gsout
+  $GAPBS_DIR/prj  -f $GRAPHS_DIR/$graph -n 3 -i 100 | grep -B 2 "Average Time" >> $jout
 done
