@@ -100,9 +100,14 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
       for (NodeID v : g.in_neigh(u))
         incoming_total += outgoing_contrib[v];
       ScoreT old_score = scores[u];
+
       scores[u] = base_score + kDamp * incoming_total;
       error += fabs(scores[u] - old_score);
       outgoing_contrib[u] = scores[u] / g.out_degree(u);
+
+      /*scores[u] = base_score + incoming_total;
+      error += fabs(scores[u] - old_score);
+      outgoing_contrib[u] = scores[u] * kdamp * recip[u];*/
     }
 
     // PRINTING OF SCORES FOR PRTERM.PY
