@@ -33,11 +33,16 @@ touch $gsout
 echo "Starting KRON runs scale 17-28"
 echo "All results will be in"
 echo "$gsout"
+echo ""
+echo "Now doing..."
 
 for graph in twitter.sg road.sg web.sg; do
   for cs in 128 256 512 1024 2048; do 
+    echo "GRAPH: $graph SIZE: $cs"
+    echo "GRAPH: $graph SIZE: $cs" >> $gsout
     g++ -fopenmp -Dchunksize=$cs -std=c++11 -O3 -Wall src/pr.cc -o prgss
     $GAPBS_DIR/prgss -f $GRAPH_DIR/$graph -n 3 -i 100 | grep -B 2 "Average Time" >> $gsout
   done
+  echo "" >> $gsout
 done
 
