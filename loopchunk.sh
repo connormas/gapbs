@@ -37,7 +37,7 @@ echo ""
 echo "Now doing..."
 
 for graph in twitter.sg road.sg web.sg; do
-  for cs in 128 256 512 1024 2048; do 
+  for cs in 4 8 16 32 64 128 256 512 1024 2048 8192 16384; do 
     echo "GRAPH: $graph SIZE: $cs"
     echo "GRAPH: $graph SIZE: $cs" >> $gsout
     g++ -fopenmp -Dchunksize=$cs -std=c++11 -O3 -Wall src/pr.cc -o prgss
