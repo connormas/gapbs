@@ -1,147 +1,219 @@
 GRAPH: twitter.sg SIZE: 4
  20    0.000081
-Trial Time:          27.33103
-Average Time:        28.10746
+Trial Time:          26.40515
+Average Time:        26.94757
 GRAPH: twitter.sg SIZE: 8
  20    0.000082
-Trial Time:          18.10305
-Average Time:        18.44030
+Trial Time:          17.98157
+Average Time:        18.00228
 GRAPH: twitter.sg SIZE: 16
  20    0.000082
-Trial Time:          15.05651
-Average Time:        15.14033
+Trial Time:          13.27366
+Average Time:        13.57599
 GRAPH: twitter.sg SIZE: 32
  20    0.000082
-Trial Time:          13.20732
-Average Time:        13.23597
+Trial Time:          12.32132
+Average Time:        12.37533
 GRAPH: twitter.sg SIZE: 64
  20    0.000082
-Trial Time:          12.97808
-Average Time:        13.09715
+Trial Time:          11.70614
+Average Time:        11.80325
 GRAPH: twitter.sg SIZE: 128
  20    0.000082
-Trial Time:          12.46754
-Average Time:        12.52925
+Trial Time:          11.58144
+Average Time:        11.57659
 GRAPH: twitter.sg SIZE: 256
  20    0.000082
-Trial Time:          12.61744
-Average Time:        12.60964
+Trial Time:          11.44526
+Average Time:        11.42816
 GRAPH: twitter.sg SIZE: 512
  20    0.000082
-Trial Time:          12.27207
-Average Time:        12.30231
+Trial Time:          11.34530
+Average Time:        11.34324
 GRAPH: twitter.sg SIZE: 1024
  20    0.000082
-Trial Time:          12.51038
-Average Time:        12.48487
+Trial Time:          11.33632
+Average Time:        11.31111
 GRAPH: twitter.sg SIZE: 2048
  20    0.000082
-Trial Time:          12.31922
-Average Time:        12.36216
+Trial Time:          11.38006
+Average Time:        11.32796
 GRAPH: twitter.sg SIZE: 8192
- 20    0.000082
-Trial Time:          12.50287
-Average Time:        12.44543
+ 20    0.000081
+Trial Time:          11.31207
+Average Time:        11.33108
 GRAPH: twitter.sg SIZE: 16384
  20    0.000082
-Trial Time:          12.38225
-Average Time:        12.37525
+Trial Time:          11.44750
+Average Time:        11.39816
+GRAPH: twitter.sg SIZE: 32768
+ 20    0.000083
+Trial Time:          11.32753
+Average Time:        11.30551
+GRAPH: twitter.sg SIZE: 65536
+ 20    0.000085
+Trial Time:          11.00957
+Average Time:        10.88361
+GRAPH: twitter.sg SIZE: 131072
+ 20    0.000084
+Trial Time:          11.24672
+Average Time:        11.40630
+GRAPH: twitter.sg SIZE: 262144
+ 20    0.000085
+Trial Time:          11.42772
+Average Time:        11.46891
+GRAPH: twitter.sg SIZE: 524288
+ 20    0.000081
+Trial Time:          11.67860
+Average Time:        11.71110
+GRAPH: twitter.sg SIZE: 1048576
+ 19    0.000093
+Trial Time:          12.23762
+Average Time:        12.25512
 
 GRAPH: road.sg SIZE: 4
  17    0.000086
-Trial Time:          9.49955
-Average Time:        9.68420
+Trial Time:          9.46298
+Average Time:        9.66559
 GRAPH: road.sg SIZE: 8
  17    0.000082
-Trial Time:          5.48393
-Average Time:        5.54626
+Trial Time:          5.49464
+Average Time:        5.55408
 GRAPH: road.sg SIZE: 16
- 17    0.000080
-Trial Time:          2.91965
-Average Time:        3.01513
+ 17    0.000079
+Trial Time:          2.82303
+Average Time:        2.88387
 GRAPH: road.sg SIZE: 32
- 17    0.000080
-Trial Time:          1.59408
-Average Time:        1.58638
+ 17    0.000078
+Trial Time:          1.54616
+Average Time:        1.57406
 GRAPH: road.sg SIZE: 64
  17    0.000075
-Trial Time:          0.72051
-Average Time:        0.70635
+Trial Time:          0.72102
+Average Time:        0.70173
 GRAPH: road.sg SIZE: 128
- 17    0.000073
-Trial Time:          0.47544
-Average Time:        0.45450
+ 17    0.000075
+Trial Time:          0.47766
+Average Time:        0.44358
 GRAPH: road.sg SIZE: 256
  17    0.000073
-Trial Time:          0.34906
-Average Time:        0.33762
+Trial Time:          0.34818
+Average Time:        0.33596
 GRAPH: road.sg SIZE: 512
  17    0.000073
-Trial Time:          0.29571
-Average Time:        0.29156
+Trial Time:          0.28933
+Average Time:        0.28414
 GRAPH: road.sg SIZE: 1024
  17    0.000074
-Trial Time:          0.27441
-Average Time:        0.27342
+Trial Time:          0.26676
+Average Time:        0.26518
 GRAPH: road.sg SIZE: 2048
  17    0.000075
-Trial Time:          0.26570
-Average Time:        0.26543
+Trial Time:          0.25624
+Average Time:        0.25665
 GRAPH: road.sg SIZE: 8192
  17    0.000078
-Trial Time:          0.26095
-Average Time:        0.26070
+Trial Time:          0.26055
+Average Time:        0.25854
 GRAPH: road.sg SIZE: 16384
  17    0.000080
-Trial Time:          0.25698
-Average Time:        0.25638
+Trial Time:          0.25255
+Average Time:        0.25266
+GRAPH: road.sg SIZE: 32768
+ 17    0.000081
+Trial Time:          0.25956
+Average Time:        0.25873
+GRAPH: road.sg SIZE: 65536
+ 17    0.000082
+Trial Time:          0.25121
+Average Time:        0.25150
+GRAPH: road.sg SIZE: 131072
+ 17    0.000084
+Trial Time:          0.26165
+Average Time:        0.26410
+GRAPH: road.sg SIZE: 262144
+ 17    0.000087
+Trial Time:          0.26885
+Average Time:        0.26865
+GRAPH: road.sg SIZE: 524288
+ 17    0.000090
+Trial Time:          0.29131
+Average Time:        0.29000
+GRAPH: road.sg SIZE: 1048576
+ 17    0.000091
+Trial Time:          0.30693
+Average Time:        0.30132
 
 GRAPH: web.sg SIZE: 4
- 19    0.000089
-Trial Time:          30.68935
-Average Time:        30.77807
+ 19    0.000090
+Trial Time:          30.53260
+Average Time:        30.48741
 GRAPH: web.sg SIZE: 8
  19    0.000084
-Trial Time:          20.18254
-Average Time:        20.18031
+Trial Time:          20.20148
+Average Time:        20.18887
 GRAPH: web.sg SIZE: 16
  19    0.000092
-Trial Time:          12.34358
-Average Time:        12.42159
+Trial Time:          12.35539
+Average Time:        12.48026
 GRAPH: web.sg SIZE: 32
- 19    0.000097
-Trial Time:          7.80654
-Average Time:        7.80996
+ 19    0.000096
+Trial Time:          7.81591
+Average Time:        7.79835
 GRAPH: web.sg SIZE: 64
  19    0.000093
-Trial Time:          5.29830
-Average Time:        5.28266
+Trial Time:          5.28121
+Average Time:        5.29738
 GRAPH: web.sg SIZE: 128
  19    0.000095
-Trial Time:          4.13341
-Average Time:        4.13178
+Trial Time:          4.13269
+Average Time:        4.11832
 GRAPH: web.sg SIZE: 256
  19    0.000093
-Trial Time:          3.57437
-Average Time:        3.56791
+Trial Time:          3.59581
+Average Time:        3.56763
 GRAPH: web.sg SIZE: 512
- 19    0.000091
-Trial Time:          3.47395
-Average Time:        3.47506
+ 19    0.000090
+Trial Time:          3.44606
+Average Time:        3.43417
 GRAPH: web.sg SIZE: 1024
  19    0.000086
-Trial Time:          3.37748
-Average Time:        3.35400
+Trial Time:          3.38002
+Average Time:        3.36124
 GRAPH: web.sg SIZE: 2048
  19    0.000081
-Trial Time:          3.43351
-Average Time:        3.41647
+Trial Time:          3.43218
+Average Time:        3.40727
 GRAPH: web.sg SIZE: 8192
  18    0.000090
-Trial Time:          3.21278
-Average Time:        3.19360
+Trial Time:          3.20499
+Average Time:        3.19213
 GRAPH: web.sg SIZE: 16384
- 18    0.000081
-Trial Time:          3.23464
-Average Time:        3.21671
+ 18    0.000080
+Trial Time:          3.20911
+Average Time:        3.19136
+GRAPH: web.sg SIZE: 32768
+ 17    0.000099
+Trial Time:          3.09878
+Average Time:        3.08833
+GRAPH: web.sg SIZE: 65536
+ 17    0.000097
+Trial Time:          3.12320
+Average Time:        3.11551
+GRAPH: web.sg SIZE: 131072
+ 17    0.000090
+Trial Time:          3.31683
+Average Time:        3.31824
+GRAPH: web.sg SIZE: 262144
+ 17    0.000089
+Trial Time:          3.36375
+Average Time:        3.36009
+GRAPH: web.sg SIZE: 524288
+ 17    0.000090
+Trial Time:          3.53708
+Average Time:        3.53106
+GRAPH: web.sg SIZE: 1048576
+ 17    0.000096
+Trial Time:          3.49305
+Average Time:        3.49926
 
