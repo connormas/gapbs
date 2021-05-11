@@ -13,12 +13,6 @@
 #include "pvector.h"
 
 /*
-#ifndef chunksize
-#define chunksize 64
-#endif
-*/
-
-/*
 GAP Benchmark Suite
 Kernel: PageRank (PR)
 Author: Scott Beamer
@@ -57,17 +51,10 @@ pvector<ScoreT> PageRankPull(const Graph &g, int max_iters,
       scores[u] = base_score + kDamp * incoming_total;
       error += fabs(scores[u] - old_score);
     }
-
-    // PRINTING OF SCORES FOR PRTERM.PY
-    //for (auto s : scores) {
-    //  cerr << s << " ";
-    //} cerr << endl;
-
     printf(" %2d    %lf\n", iter, error);
     if (error < epsilon)
       break;
   }
-  //cerr << "> done w iteration" << endl;
   return scores;
 }
 
@@ -87,13 +74,6 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
   const ScoreT base_score = (1.0f - kDamp) / g.num_nodes();
   pvector<ScoreT> scores(g.num_nodes(), init_score);
   pvector<ScoreT> outgoing_contrib(g.num_nodes());
-  
-  // PRINTING DEGREES FOR PRTERM.PY
-  //cerr << "$ "; 
-  //for (NodeID n = 0; n < g.num_nodes(); n++) {
-  //  cerr << g.out_degree(n) << " ";
-  //} cerr << endl;
-
   #pragma omp parallel for
   for (NodeID n=0; n < g.num_nodes(); n++)
     outgoing_contrib[n] = init_score / g.out_degree(n);
@@ -114,17 +94,10 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
       error += fabs(scores[u] - old_score);
       outgoing_contrib[u] = scores[u] * kdamp * recip[u];*/
     }
-
-    // PRINTING OF SCORES FOR PRTERM.PY
-    //for (auto s : scores) {
-    //  cerr << std::setw(10) << s << " ";
-    //} cerr << endl;
-
     printf(" %2d    %lf\n", iter, error);
     if (error < epsilon)
       break;
   }
-  //cerr << "> done w iteration" << endl;
   return scores;
 }
 
@@ -169,15 +142,8 @@ int main(int argc, char* argv[]) {
     return -1;
   Builder b(cli);
   Graph g = b.MakeGraph();
-  
-  //if (relabel) // must be defined with compile time macro 
-  //  g = Builder::RelabelByDegree(g);
-    
   auto PRBound = [&cli] (const Graph &g) {
-  if (false)
-    return PageRankPull(g, cli.max_iters(), cli.tolerance());
-  else 
-    return PageRankPullGS(g, cli.max_iters(), cli.tolerance());
+  return PageRankPullGS(g, cli.max_iters(), cli.tolerance());
   };
   auto VerifierBound = [&cli] (const Graph &g, const pvector<ScoreT> &scores) {
     return PRVerifier(g, scores, cli.tolerance());
