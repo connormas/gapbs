@@ -58,16 +58,7 @@ pvector<ScoreT> PageRankPull(const Graph &g, int max_iters,
   return scores;
 }
 
-/*
-PageRank in Pull Direction using Gauss-Seidel method
-Objective: most likely longer interations, but fewer
-           interations to result in a net speedup
-Ideas:
-- initialize scores with node degree
-- update outgoing_contrib on the fly
-*/
 
-// Graph g is not longer const
 pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
                              double epsilon = 0) {
   const ScoreT init_score = 1.0f / g.num_nodes();
