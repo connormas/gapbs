@@ -85,14 +85,9 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
       for (NodeID v : g.in_neigh(u))
         incoming_total += outgoing_contrib[v];
       ScoreT old_score = scores[u];
-
       scores[u] = base_score + kDamp * incoming_total;
       error += fabs(scores[u] - old_score);
       outgoing_contrib[u] = scores[u] / g.out_degree(u);
-
-      /*scores[u] = base_score + incoming_total;
-      error += fabs(scores[u] - old_score);
-      outgoing_contrib[u] = scores[u] * kdamp * recip[u];*/
     }
     printf(" %2d    %lf\n", iter, error);
     if (error < epsilon)
@@ -143,7 +138,7 @@ int main(int argc, char* argv[]) {
   Builder b(cli);
   Graph g = b.MakeGraph();
   auto PRBound = [&cli] (const Graph &g) {
-  return PageRankPullGS(g, cli.max_iters(), cli.tolerance());
+    return PageRankPullGS(g, cli.max_iters(), cli.tolerance());
   };
   auto VerifierBound = [&cli] (const Graph &g, const pvector<ScoreT> &scores) {
     return PRVerifier(g, scores, cli.tolerance());
