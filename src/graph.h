@@ -80,16 +80,12 @@ struct EdgePair {
   EdgePair(SrcT u, DstT v) : u(u), v(v) {}
 
   bool operator< (const EdgePair& rhs) const {
-    if (u == rhs.u) {
-      return v < rhs.v;
-    } else {
-      return u < rhs.u;
-    }
+    return u == rhs.u ? v < rhs.v : u < rhs.u;
   }
-  
+
   bool operator== (const EdgePair& rhs) const {
-    return ((u == rhs.u) && (v == rhs.v));
-  } 
+    return (u == rhs.u) && (v == rhs.v);
+  }
 };
 
 // SG = serialized graph, these types are for writing graph to file
@@ -247,9 +243,8 @@ class CSRGraph {
     NodeID_ length = offsets.size();
     DestID_** index = new DestID_*[length];
     #pragma omp parallel for
-    for (NodeID_ n=0; n < length; n++){
+    for (NodeID_ n=0; n < length; n++)
       index[n] = neighs + offsets[n];
-    }
     return index;
   }
 
