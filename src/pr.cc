@@ -70,7 +70,7 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
     outgoing_contrib[n] = init_score / g.out_degree(n);
   for (int iter=0; iter < max_iters; iter++) {
     double error = 0;
-    #pragma omp parallel for reduction(+ : error) schedule(dynamic, chunksize)
+    #pragma omp parallel for reduction(+ : error) schedule(dynamic, 16384)
     for (NodeID u=0; u < g.num_nodes(); u++) {
       ScoreT incoming_total = 0;
       for (NodeID v : g.in_neigh(u))
@@ -78,7 +78,7 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
       ScoreT old_score = scores[u];
       scores[u] = base_score + kDamp * incoming_total;
       error += fabs(scores[u] - old_score);
-      outgoing_contrib[u] = scores[u] / g.out_degree(u);
+//      outgoing_contrib[u] = scores[u] / g.out_degree(u);
     }
     printf(" %2d    %lf\n", iter, error);
     if (error < epsilon)
