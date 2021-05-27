@@ -61,15 +61,22 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
 }
 
 
-pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
+pvector<ScoreT> PageRankPullGS_noDivide(const Graph &g, int max_iters,
                              double epsilon = 0) {
   const ScoreT init_score = 1.0f / g.num_nodes();
   const ScoreT base_score = (1.0f - kDamp) / g.num_nodes();
   pvector<ScoreT> scores(g.num_nodes(), init_score);
   pvector<ScoreT> outgoing_contrib(g.num_nodes());
+  
+  pvector<ScoreT> recip(g.num_nodes());
+  
   #pragma omp parallel for
-  for (NodeID n=0; n < g.num_nodes(); n++)
+  for (NodeID n=0; n < g.num_nodes(); n++) {
     outgoing_contrib[n] = init_score / g.out_degree(n);
+
+    recip[n] = 1.0f / g.out_degree(n);
+  
+  }
   for (int iter=0; iter < max_iters; iter++) {
     double error = 0;
     #pragma omp parallel for reduction(+ : error) schedule(dynamic, 16384)
@@ -78,9 +85,10 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters,
       for (NodeID v : g.in_neigh(u))
         incoming_total += outgoing_contrib[v];
       ScoreT old_score = scores[u];
+ 
       scores[u] = base_score + kDamp * incoming_total;
       error += fabs(scores[u] - old_score);
-//      outgoing_contrib[u] = scores[u] / g.out_degree(u);
+      outgoing_contrib[u] = scores[u] * recip[u];
     }
     printf(" %2d    %lf\n", iter, error);
     if (error < epsilon)
@@ -131,7 +139,7 @@ int main(int argc, char* argv[]) {
   Builder b(cli);
   Graph g = b.MakeGraph();
   auto PRBound = [&cli] (const Graph &g) {
-    return PageRankPullGS(g, cli.max_iters(), cli.tolerance());
+    return PageRankPullGS_noDivide(g, cli.max_iters(), cli.tolerance());
   };
   auto VerifierBound = [&cli] (const Graph &g, const pvector<ScoreT> &scores) {
     return PRVerifier(g, scores, cli.tolerance());
