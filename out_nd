@@ -1,0 +1,18 @@
+
+ Performance counter stats for './pr_recip -g 25 -n 3':
+
+        621,786.08 msec task-clock                #   21.747 CPUs utilized          
+             1,452      context-switches          #    0.002 K/sec                  
+                24      cpu-migrations            #    0.000 K/sec                  
+         5,138,391      page-faults               #    0.008 M/sec                  
+ 1,883,257,113,552      cycles                    #    3.029 GHz                    
+ 1,101,683,477,253      instructions              #    0.58  insn per cycle         
+   175,833,038,394      branches                  #  282.787 M/sec                  
+    16,977,795,703      branch-misses             #    9.66% of all branches        
+
+      28.591494171 seconds time elapsed
+
+     607.278022000 seconds user
+      14.542205000 seconds sys
+
+

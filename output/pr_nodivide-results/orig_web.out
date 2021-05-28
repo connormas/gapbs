@@ -1,0 +1,19 @@
+web on pr_orig
+
+ Performance counter stats for './pr_orig -f /lscratch/graphs/web.sg -n 3':
+
+        200,154.67 msec task-clock                #   10.952 CPUs utilized          
+             1,773      context-switches          #    0.009 K/sec                  
+                24      cpu-migrations            #    0.000 K/sec                  
+         5,527,929      page-faults               #    0.028 M/sec                  
+   599,761,067,934      cycles                    #    2.996 GHz                    
+   649,496,589,771      instructions              #    1.08  insn per cycle         
+   120,278,499,847      branches                  #  600.928 M/sec                  
+     1,632,562,159      branch-misses             #    1.36% of all branches        
+
+      18.275509136 seconds time elapsed
+
+     186.566981000 seconds user
+      13.723217000 seconds sys
+
+

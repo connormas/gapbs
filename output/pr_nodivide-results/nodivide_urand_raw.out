@@ -1,0 +1,19 @@
+Generate Time:       0.05907
+Build Time:          0.21624
+Graph has 1048576 nodes and 16776968 undirected edges for degree: 15
+  0    0.119422
+  1    0.012077
+  2    0.001046
+  3    0.000092
+Trial Time:          0.02041
+  0    0.119422
+  1    0.012077
+  2    0.001045
+  3    0.000092
+Trial Time:          0.01974
+  0    0.119424
+  1    0.012077
+  2    0.001045
+  3    0.000092
+Trial Time:          0.01960
+Average Time:        0.01992

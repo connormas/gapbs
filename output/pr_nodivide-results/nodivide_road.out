@@ -1,0 +1,19 @@
+road on pr_recip
+
+ Performance counter stats for './pr_recip -f /lscratch/graphs/road.sg -n 3':
+
+         18,783.96 msec task-clock                #   14.869 CPUs utilized          
+               136      context-switches          #    0.007 K/sec                  
+                24      cpu-migrations            #    0.001 K/sec                  
+           463,723      page-faults               #    0.025 M/sec                  
+    55,168,723,323      cycles                    #    2.937 GHz                    
+    46,111,875,410      instructions              #    0.84  insn per cycle         
+     6,224,623,059      branches                  #  331.380 M/sec                  
+       802,105,570      branch-misses             #   12.89% of all branches        
+
+       1.263336386 seconds time elapsed
+
+      16.461125000 seconds user
+       2.340120000 seconds sys
+
+

@@ -1,0 +1,19 @@
+web on pr_recip
+
+ Performance counter stats for './pr_recip -f /lscratch/graphs/web.sg -n 3':
+
+        199,616.47 msec task-clock                #   10.863 CPUs utilized          
+             1,774      context-switches          #    0.009 K/sec                  
+                24      cpu-migrations            #    0.000 K/sec                  
+         5,217,355      page-faults               #    0.026 M/sec                  
+   598,538,718,580      cycles                    #    2.998 GHz                    
+   635,368,174,290      instructions              #    1.06  insn per cycle         
+   120,237,401,147      branches                  #  602.342 M/sec                  
+     1,677,494,964      branch-misses             #    1.40% of all branches        
+
+      18.376043485 seconds time elapsed
+
+     186.239978000 seconds user
+      13.507726000 seconds sys
+
+

@@ -1,0 +1,19 @@
+twitter on pr_recip
+
+ Performance counter stats for './pr_recip -f /lscratch/graphs/twitter.sg -n 3':
+
+        720,905.79 msec task-clock                #   19.316 CPUs utilized          
+               877      context-switches          #    0.001 K/sec                  
+                24      cpu-migrations            #    0.000 K/sec                  
+         5,469,484      page-faults               #    0.008 M/sec                  
+ 2,224,985,036,792      cycles                    #    3.086 GHz                    
+   536,708,735,557      instructions              #    0.24  insn per cycle         
+    99,133,405,307      branches                  #  137.512 M/sec                  
+     3,126,139,309      branch-misses             #    3.15% of all branches        
+
+      37.322386821 seconds time elapsed
+
+     707.504709000 seconds user
+      13.415730000 seconds sys
+
+

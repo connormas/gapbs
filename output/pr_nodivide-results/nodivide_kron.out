@@ -1,0 +1,57 @@
+SCALE 18 on pr_recip
+
+ Performance counter stats for './pr_recip -g 18 -n 3':
+
+          5,183.79 msec task-clock                #   20.995 CPUs utilized          
+                47      context-switches          #    0.009 K/sec                  
+                24      cpu-migrations            #    0.005 K/sec                  
+            27,753      page-faults               #    0.005 M/sec                  
+    14,890,549,342      cycles                    #    2.873 GHz                    
+     8,023,945,676      instructions              #    0.54  insn per cycle         
+     1,382,868,688      branches                  #  266.768 M/sec                  
+       110,402,403      branch-misses             #    7.98% of all branches        
+
+       0.246906739 seconds time elapsed
+
+       5.037606000 seconds user
+       0.150194000 seconds sys
+
+
+SCALE 19 on pr_recip
+
+ Performance counter stats for './pr_recip -g 19 -n 3':
+
+          7,994.97 msec task-clock                #   20.489 CPUs utilized          
+                84      context-switches          #    0.011 K/sec                  
+                24      cpu-migrations            #    0.003 K/sec                  
+            55,069      page-faults               #    0.007 M/sec                  
+    22,751,526,422      cycles                    #    2.846 GHz                    
+    15,359,328,328      instructions              #    0.68  insn per cycle         
+     2,569,029,197      branches                  #  321.331 M/sec                  
+       223,972,544      branch-misses             #    8.72% of all branches        
+
+       0.390207363 seconds time elapsed
+
+       7.857290000 seconds user
+       0.144391000 seconds sys
+
+
+SCALE 20 on pr_recip
+
+ Performance counter stats for './pr_recip -g 20 -n 3':
+
+         15,854.41 msec task-clock                #   21.722 CPUs utilized          
+               164      context-switches          #    0.010 K/sec                  
+                24      cpu-migrations            #    0.002 K/sec                  
+           109,280      page-faults               #    0.007 M/sec                  
+    47,336,366,704      cycles                    #    2.986 GHz                    
+    32,509,359,458      instructions              #    0.69  insn per cycle         
+     5,393,374,546      branches                  #  340.181 M/sec                  
+       470,867,947      branch-misses             #    8.73% of all branches        
+
+       0.729884041 seconds time elapsed
+
+      15.545145000 seconds user
+       0.325447000 seconds sys
+
+
