@@ -2,56 +2,189 @@ SCALE 18 on pr_orig
 
  Performance counter stats for './pr_orig -u 18 -n 3':
 
-          2,520.77 msec task-clock                #   21.814 CPUs utilized          
-                49      context-switches          #    0.019 K/sec                  
-                24      cpu-migrations            #    0.010 K/sec                  
-            27,431      page-faults               #    0.011 M/sec                  
-     6,257,684,229      cycles                    #    2.482 GHz                    
-     2,329,727,157      instructions              #    0.37  insn per cycle         
-       415,755,463      branches                  #  164.932 M/sec                  
-        26,330,505      branch-misses             #    6.33% of all branches        
+          2,531.01 msec task-clock                #   21.768 CPUs utilized          
+                28      context-switches          #    0.011 K/sec                  
+                24      cpu-migrations            #    0.009 K/sec                  
+            27,445      page-faults               #    0.011 M/sec                  
+     6,241,729,451      cycles                    #    2.466 GHz                    
+     2,330,632,219      instructions              #    0.37  insn per cycle         
+       416,058,264      branches                  #  164.384 M/sec                  
+        26,360,922      branch-misses             #    6.34% of all branches        
 
-       0.115557554 seconds time elapsed
+       0.116273083 seconds time elapsed
 
-       2.401553000 seconds user
-       0.122046000 seconds sys
+       2.441845000 seconds user
+       0.092069000 seconds sys
 
 
 SCALE 19 on pr_orig
 
  Performance counter stats for './pr_orig -u 19 -n 3':
 
-          4,710.88 msec task-clock                #   22.819 CPUs utilized          
-                19      context-switches          #    0.004 K/sec                  
+          4,659.60 msec task-clock                #   22.717 CPUs utilized          
+                39      context-switches          #    0.008 K/sec                  
                 24      cpu-migrations            #    0.005 K/sec                  
-            54,570      page-faults               #    0.012 M/sec                  
-    13,122,301,445      cycles                    #    2.786 GHz                    
-     4,600,621,829      instructions              #    0.35  insn per cycle         
-       815,529,720      branches                  #  173.116 M/sec                  
-        52,451,348      branch-misses             #    6.43% of all branches        
+            54,573      page-faults               #    0.012 M/sec                  
+    12,977,175,876      cycles                    #    2.785 GHz                    
+     4,590,704,247      instructions              #    0.35  insn per cycle         
+       812,735,498      branches                  #  174.422 M/sec                  
+        52,533,872      branch-misses             #    6.46% of all branches        
 
-       0.206444991 seconds time elapsed
+       0.205114814 seconds time elapsed
 
-       4.454486000 seconds user
-       0.258934000 seconds sys
+       4.447807000 seconds user
+       0.215409000 seconds sys
 
 
 SCALE 20 on pr_orig
 
  Performance counter stats for './pr_orig -u 20 -n 3':
 
-          9,299.52 msec task-clock                #   23.012 CPUs utilized          
-               124      context-switches          #    0.013 K/sec                  
+          9,188.01 msec task-clock                #   23.072 CPUs utilized          
+               109      context-switches          #    0.012 K/sec                  
                 24      cpu-migrations            #    0.003 K/sec                  
-           108,836      page-faults               #    0.012 M/sec                  
-    27,109,813,194      cycles                    #    2.915 GHz                    
-     8,893,755,065      instructions              #    0.33  insn per cycle         
-     1,543,905,178      branches                  #  166.020 M/sec                  
-       104,862,592      branch-misses             #    6.79% of all branches        
+           108,821      page-faults               #    0.012 M/sec                  
+    26,988,547,192      cycles                    #    2.937 GHz                    
+     8,879,265,033      instructions              #    0.33  insn per cycle         
+     1,539,845,429      branches                  #  167.593 M/sec                  
+       105,065,747      branch-misses             #    6.82% of all branches        
 
-       0.404123456 seconds time elapsed
+       0.398225205 seconds time elapsed
 
-       8.833451000 seconds user
-       0.474225000 seconds sys
+       8.763622000 seconds user
+       0.433167000 seconds sys
+
+
+SCALE 21 on pr_orig
+
+ Performance counter stats for './pr_orig -u 21 -n 3':
+
+         19,885.39 msec task-clock                #   22.889 CPUs utilized          
+               140      context-switches          #    0.007 K/sec                  
+                24      cpu-migrations            #    0.001 K/sec                  
+           217,375      page-faults               #    0.011 M/sec                  
+    59,354,935,588      cycles                    #    2.985 GHz                    
+    17,514,805,371      instructions              #    0.30  insn per cycle         
+     3,010,188,136      branches                  #  151.377 M/sec                  
+       210,173,306      branch-misses             #    6.98% of all branches        
+
+       0.868780014 seconds time elapsed
+
+      19.103492000 seconds user
+       0.792459000 seconds sys
+
+
+SCALE 22 on pr_orig
+
+ Performance counter stats for './pr_orig -u 22 -n 3':
+
+         42,389.46 msec task-clock                #   22.841 CPUs utilized          
+               231      context-switches          #    0.005 K/sec                  
+                24      cpu-migrations            #    0.001 K/sec                  
+           594,499      page-faults               #    0.014 M/sec                  
+   128,151,112,844      cycles                    #    3.023 GHz                    
+    34,802,156,498      instructions              #    0.27  insn per cycle         
+     5,926,887,997      branches                  #  139.820 M/sec                  
+       419,998,972      branch-misses             #    7.09% of all branches        
+
+       1.855864457 seconds time elapsed
+
+      40.747095000 seconds user
+       1.656939000 seconds sys
+
+
+SCALE 23 on pr_orig
+
+ Performance counter stats for './pr_orig -u 23 -n 3':
+
+         91,900.36 msec task-clock                #   22.895 CPUs utilized          
+               306      context-switches          #    0.003 K/sec                  
+                24      cpu-migrations            #    0.000 K/sec                  
+         1,384,989      page-faults               #    0.015 M/sec                  
+   281,046,098,017      cycles                    #    3.058 GHz                    
+    69,529,507,270      instructions              #    0.25  insn per cycle         
+    11,797,278,026      branches                  #  128.370 M/sec                  
+       842,260,466      branch-misses             #    7.14% of all branches        
+
+       4.014015052 seconds time elapsed
+
+      88.050875000 seconds user
+       3.864339000 seconds sys
+
+
+SCALE 24 on pr_orig
+
+ Performance counter stats for './pr_orig -u 24 -n 3':
+
+        208,811.74 msec task-clock                #   22.908 CPUs utilized          
+               485      context-switches          #    0.002 K/sec                  
+                24      cpu-migrations            #    0.000 K/sec                  
+         3,227,517      page-faults               #    0.015 M/sec                  
+   638,994,327,499      cycles                    #    3.060 GHz                    
+   139,134,052,724      instructions              #    0.22  insn per cycle         
+    23,552,389,737      branches                  #  112.792 M/sec                  
+     1,687,566,885      branch-misses             #    7.17% of all branches        
+
+       9.115338181 seconds time elapsed
+
+     200.973076000 seconds user
+       7.858701000 seconds sys
+
+
+SCALE 25 on pr_orig
+
+ Performance counter stats for './pr_orig -u 25 -n 3':
+
+        485,455.48 msec task-clock                #   22.975 CPUs utilized          
+               961      context-switches          #    0.002 K/sec                  
+                24      cpu-migrations            #    0.000 K/sec                  
+         6,707,766      page-faults               #    0.014 M/sec                  
+ 1,494,358,860,781      cycles                    #    3.078 GHz                    
+   278,408,283,609      instructions              #    0.19  insn per cycle         
+    47,067,239,625      branches                  #   96.955 M/sec                  
+     3,379,254,858      branch-misses             #    7.18% of all branches        
+
+      21.130045767 seconds time elapsed
+
+     470.037985000 seconds user
+      15.441904000 seconds sys
+
+
+SCALE 26 on pr_orig
+
+ Performance counter stats for './pr_orig -u 26 -n 3':
+
+      1,064,809.46 msec task-clock                #   23.039 CPUs utilized          
+             1,515      context-switches          #    0.001 K/sec                  
+                24      cpu-migrations            #    0.000 K/sec                  
+        14,281,242      page-faults               #    0.013 M/sec                  
+ 3,287,081,346,037      cycles                    #    3.087 GHz                    
+   557,976,920,330      instructions              #    0.17  insn per cycle         
+    94,229,672,753      branches                  #   88.494 M/sec                  
+     6,787,890,648      branch-misses             #    7.20% of all branches        
+
+      46.217338896 seconds time elapsed
+
+    1031.788305000 seconds user
+      33.050500000 seconds sys
+
+
+SCALE 27 on pr_orig
+
+ Performance counter stats for './pr_orig -u 27 -n 3':
+
+      2,281,785.48 msec task-clock                #   23.109 CPUs utilized          
+             2,503      context-switches          #    0.001 K/sec                  
+                24      cpu-migrations            #    0.000 K/sec                  
+        26,425,817      page-faults               #    0.012 M/sec                  
+ 7,048,726,084,987      cycles                    #    3.089 GHz                    
+ 1,115,312,340,251      instructions              #    0.16  insn per cycle         
+   188,074,814,291      branches                  #   82.424 M/sec                  
+    13,664,874,075      branch-misses             #    7.27% of all branches        
+
+      98.738331020 seconds time elapsed
+
+    2218.535965000 seconds user
+      63.274294000 seconds sys
 
 

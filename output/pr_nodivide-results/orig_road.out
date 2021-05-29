@@ -2,18 +2,18 @@ road on pr_orig
 
  Performance counter stats for './pr_orig -f /lscratch/graphs/road.sg -n 3':
 
-         19,257.78 msec task-clock                #   15.168 CPUs utilized          
-               142      context-switches          #    0.007 K/sec                  
+         19,337.57 msec task-clock                #   15.788 CPUs utilized          
+               166      context-switches          #    0.009 K/sec                  
                 24      cpu-migrations            #    0.001 K/sec                  
-           393,614      page-faults               #    0.020 M/sec                  
-    54,580,498,182      cycles                    #    2.834 GHz                    
-    52,115,317,933      instructions              #    0.95  insn per cycle         
-     6,180,929,640      branches                  #  320.957 M/sec                  
-       806,800,253      branch-misses             #   13.05% of all branches        
+           393,560      page-faults               #    0.020 M/sec                  
+    55,680,392,455      cycles                    #    2.879 GHz                    
+    52,121,361,837      instructions              #    0.94  insn per cycle         
+     6,181,972,581      branches                  #  319.687 M/sec                  
+       806,835,412      branch-misses             #   13.05% of all branches        
 
-       1.269657821 seconds time elapsed
+       1.224839787 seconds time elapsed
 
-      17.204239000 seconds user
-       2.069953000 seconds sys
+      17.562728000 seconds user
+       1.785497000 seconds sys
 
 

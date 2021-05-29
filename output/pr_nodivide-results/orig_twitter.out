@@ -2,18 +2,18 @@ twitter on pr_orig
 
  Performance counter stats for './pr_orig -f /lscratch/graphs/twitter.sg -n 3':
 
-        668,608.08 msec task-clock                #   19.039 CPUs utilized          
-               811      context-switches          #    0.001 K/sec                  
+        667,969.54 msec task-clock                #   19.587 CPUs utilized          
+               803      context-switches          #    0.001 K/sec                  
                 24      cpu-migrations            #    0.000 K/sec                  
-         5,444,964      page-faults               #    0.008 M/sec                  
- 2,032,040,769,883      cycles                    #    3.039 GHz                    
-   554,323,410,925      instructions              #    0.27  insn per cycle         
-    99,081,987,469      branches                  #  148.191 M/sec                  
-     3,094,423,636      branch-misses             #    3.12% of all branches        
+         6,625,421      page-faults               #    0.010 M/sec                  
+ 2,009,616,014,429      cycles                    #    3.009 GHz                    
+   556,147,502,623      instructions              #    0.28  insn per cycle         
+    99,429,107,145      branches                  #  148.853 M/sec                  
+     3,096,852,717      branch-misses             #    3.11% of all branches        
 
-      35.117469772 seconds time elapsed
+      34.102378227 seconds time elapsed
 
-     655.623390000 seconds user
-      12.999036000 seconds sys
+     654.639669000 seconds user
+      13.341955000 seconds sys
 
 
